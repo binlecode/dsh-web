@@ -122,7 +122,7 @@ export const REVIEWED_SKIN_HOOKS: Readonly<Record<string, ReviewedSkinHooksIdent
   "white-snake": {
     entry: "hooks.mjs",
     manifestSha256: "57de181465d50070f4580d08f71aefa59f97ed46816e8bb4afafad61e388c9a2",
-    hooksSha256: "dbee121bf80990fb3cf32c8560f10e727ec95ea3c203f1a4b894e46dc6c4d326",
+    hooksSha256: "9fa780c8800e5d0d6f4766bfec4352d45e1853094649cdd95ca15a04bf5fc5d5",
   },
   "xp": {
     entry: "hooks.mjs",
