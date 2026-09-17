@@ -186,20 +186,6 @@ export default function defineSkinHooks() {
           tag: 'ED',
           file: 'over-the-sky.mp3',
         },
-        {
-          id: 'rays-of-hope',
-          title: 'Rays of hope',
-          artist: 'Hitomi',
-          tag: 'IN',
-          file: 'rays-of-hope.mp3',
-        },
-        {
-          id: 'lost-friend',
-          title: 'Lost Friend',
-          artist: 'Dolce Triade',
-          tag: 'OST',
-          file: 'lost-friend.mp3',
-        },
       ];
 
       let currentIndex = 0;

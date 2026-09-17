@@ -247,20 +247,6 @@ export default function defineSkinHooks() {
           tag: '原声',
           file: 'broken-bridge-meeting.mp3',
         },
-        {
-          id: 'baoqing-workshop',
-          title: '宝青坊',
-          artist: '郭好为',
-          tag: '玄机',
-          file: 'baoqing-workshop.mp3',
-        },
-        {
-          id: 'destiny-farewell',
-          title: '诀别',
-          artist: '郭好为',
-          tag: '宿命',
-          file: 'destiny-farewell.mp3',
-        },
       ];
 
       let currentIndex = 0;

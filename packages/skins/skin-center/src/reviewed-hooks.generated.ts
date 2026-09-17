@@ -52,7 +52,7 @@ export const REVIEWED_SKIN_HOOKS: Readonly<Record<string, ReviewedSkinHooksIdent
   "last-exile": {
     entry: "hooks.mjs",
     manifestSha256: "f3226bad4ea993baaa313dca85ab424b2cbeb4e76ade88e2af35a816abdd95f9",
-    hooksSha256: "a568b6754b435a9d6af1995d3b9d2a3ce0279005c2fe384eca8f8957f5201ab0",
+    hooksSha256: "309738b54e8c1142f793a497ef7396f1415c633e11b39e0cb99f2c3219adb6ec",
   },
   "maid-atelier": {
     entry: "hooks.mjs",
@@ -122,7 +122,7 @@ export const REVIEWED_SKIN_HOOKS: Readonly<Record<string, ReviewedSkinHooksIdent
   "white-snake": {
     entry: "hooks.mjs",
     manifestSha256: "57de181465d50070f4580d08f71aefa59f97ed46816e8bb4afafad61e388c9a2",
-    hooksSha256: "9fa780c8800e5d0d6f4766bfec4352d45e1853094649cdd95ca15a04bf5fc5d5",
+    hooksSha256: "0810ff463987652ab50f0bde926b694b627d3f7baa2680f3403a18e2084c9744",
   },
   "xp": {
     entry: "hooks.mjs",
