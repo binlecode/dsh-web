@@ -4,7 +4,7 @@
   "id": "white-snake",
   "name": "白蛇·缘起浮生",
   "nameEn": "White Snake",
-  "author": "追光动画 · dsh 适配",
+  "author": "binlecode",
   "tagline": "西湖断桥与永州雪岭双巡航背景 · 碧玉翡翠与月华玄青调色板 · 新国风东方美学",
   "description": "追光动画经典巨作《白蛇：缘起》与《白蛇：浮生》主题皮肤：西湖烟雨断桥相会，永州雪岭巨蟒宿命，搭配宋代素绢水墨、温润碧玉与流光冰碧东方新国风调色板。",
   "tags": [
@@ -18,10 +18,10 @@
   "accent": "#107c65",
   "order": 3,
   "version": "1.0.0",
-  "license": "Proprietary (fan theme; artwork © Light Chaser Animation)",
+  "license": "CC BY-NC-SA 4.0",
   "sourceUrl": "https://github.com/zhu1090093659/dsh-web",
-  "noticeUrl": "NOTICE",
-  "attribution": "主题与代码：binlecode · 原作美术：© 追光动画《白蛇：缘起》《白蛇：浮生》 · 音乐：© 郭好为 / 追光动画（权利人所有，仅供本地个人使用）",
+  "noticeUrl": "https://github.com/zhu1090093659/dsh-web/blob/dev/packages/skins/skin-center/skins/white-snake/NOTICE",
+  "attribution": "角色与场景素材出自追光动画《白蛇：缘起》《白蛇：浮生》，版权归追光动画所有；本皮肤为个人非商业同人作品，背景取自官方公开素材、作者不主张权利，CC BY-NC-SA 4.0 仅覆盖皮肤工程",
   "preview": {
     "light": "preview/light.jpg",
     "dark": "preview/dark.jpg"
@@ -56,5 +56,6 @@
       "entry": "hooks.mjs",
       "apiVersion": "x-org.linxin666.skin-center/v1alpha1"
     }
-  }
+  },
+  "licenseUrl": "https://creativecommons.org/licenses/by-nc-sa/4.0/"
 }

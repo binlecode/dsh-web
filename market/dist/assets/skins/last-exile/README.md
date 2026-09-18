@@ -1,33 +1,36 @@
-# GONZO · Last Exile（最后流亡 · 先锋艇）主题皮肤
+# last-exile (Last Exile)
 
-GONZO 20 周年经典科幻动画《最后流亡》主题皮肤：克劳斯与拉薇的先锋艇飞跃大风暴区，搭配安纳托雷座舱橄榄黄铜与克劳迪亚幽蓝复古柴油朋克航空调色板。
+English | [中文](README.zh.md)
 
-👉 **完整设计理念、视觉哲学与实现架构文档见**：[`../../docs/dsh-theme-last-exile.md`](../../docs/dsh-theme-last-exile.md)
+A fan skin themed on GONZO's 20th-anniversary sci-fi masterpiece *LAST EXILE* (2003): Claus and Lavie's Vanship cruising across the skies of Anatoray and the Grand Stream storm. Features olive-brass cockpit tones in light mode and deep Claudia cyan in dark mode, with WCAG AAA contrast (> 14:1).
 
----
+## Install
 
-## 特性速览
+The skin center is the only loader: install it (or the all-in-one aggregate),
+then install this skin from the [Creative Workshop](https://dsh-market.com) into
+`$DSH_HOME/skins/last-exile/`, and apply it in "Settings -> Skins". Switching is atomic and needs no restart.
 
-- **双极日夜 4K 巡航壁纸**：
-  - 浅色模式：安纳托雷晴空巡航（`assets/vanship.jpg`）+ 冷绿漫反射光纱。
-  - 深色模式：大风暴区电闪雷鸣（`assets/grandstream.jpg`）+ 暴风冷靛渐变光纱。
-- **一键场景壁纸轮播（`hooks.mjs`）**：
-  - 侧边栏底部「先锋艇 • 飞行徽章」卡片内置 `🖼️` 场景切换按钮。
-  - 循环切换「日夜自适应 / 风暴云海（`grandstream.jpg`） / 银之战舰（`silvana.jpg`） / 晴空先锋（`vanship.jpg`）」4 组场景，`localStorage` 持久化，重启后仍保留上次选择。
-  - 「日夜自适应」跟随明暗模式自动在晴空先锋（浅色）与风暴云海（深色）之间切换。
-- **WCAG AAA 级高对比度**：
-  - 浅色模式采用枪铁仪表黑（`#1b2220`），深色模式采用高空极光白（`#e8f0f7`），对比度 > 15:1。
-  - 彻底修复思考文本框高度截断与颜色看不清问题，消除正文未到达时的幽灵空白条。
-- **维多利亚复古工业质感**：
-  - 14px 高斯模糊磨砂面板，深色模式带克劳迪亚幽蓝发丝微光描边（`1px solid rgba(34, 211, 238, 0.14)`）。
-  - 先锋艇机械仪表盘风格思考卡片与双色微光气泡。
-- **克劳迪亚复古多曲音乐播放器（`hooks.mjs`）**：
-  - 与飞行徽章同栖左侧边栏底栏，微型克劳迪亚幽蓝与黄铜齿轮唱片随旋律旋转。
-  - 完整收录经典原声四大金曲曲库，支持一键切歌（⏭）、快捷键与自动连播：
-    1. **OP 片头曲**：沖野俊太郎《Cloud Age Symphony》（`assets/cloud-age-symphony.mp3`，5分57秒）
-    2. **ED 片尾曲**：黑石瞳（Hitomi）《Over The Sky》（`assets/over-the-sky.mp3`，4分33秒）
-    3. **IN 经典插曲**：黑石瞳（Hitomi）《Rays of hope》（`assets/rays-of-hope.mp3`，4分37秒）
-    4. **OST 经典原声**：Dolce Triade《Lost Friend》（`assets/lost-friend.mp3`，4分21秒）
-  - 沉浸式还原克劳斯与拉薇驾驶先锋艇飞跃大风暴区的空灵与史诗感。
-- **100% 本地自包含**：
-  - 4K 壁纸、原声音频与样式全本地托管，零外部网络请求。
+## Layout
+
+- `skin.json` — v2 manifest: `contributes.stylesheet` / `patches` / `backgroundMedia`
+  (light -> `assets/vanship.jpg`, dark -> `assets/grandstream.jpg`, each with its own calibrated scrim)
+- `skin.css` — L1: base colour plus the full `--dsw-*` palette remap (light on `:root`, dark on `body[data-ds-dark-theme]`)
+- `patches.css` — L3: Victorian industrial frosted panels, vanship gauge styling, custom emblem (`assets/vanship-emblem.svg`)
+- `hooks.mjs` — runtime enhancement: dual wallpaper auto-adaptation and music player
+- `assets/` — canonical scene wallpapers, SVG icons, and audio tracks
+- `NOTICE` — artwork provenance and copyright notice
+- `LICENSE` — CC BY-NC-SA 4.0 license text
+
+## Preview
+
+Light ([preview/light.jpg](preview/light.jpg)) · Dark ([preview/dark.jpg](preview/dark.jpg))
+
+## Copyright
+
+The anime series, characters, and Vanship mechanical designs are from *LAST EXILE*, (c) 2003 GONZO / DIGIMATION - FlyingDog, character concepts by Range Murata.
+The backdrop images in `assets/` are taken from official promotional stills and artwork; the skin author claims no rights to them. Their use here is personal, non-commercial fan display only, and is not affiliated with or endorsed by GONZO.
+
+The skin engineering (`skin.json` / `skin.css` / `patches.css` / `hooks.mjs` and the palette remap)
+is the author's work, released under CC BY-NC-SA 4.0 — that license does NOT extend to the official artwork above. See [NOTICE](NOTICE).
+
+> © 2003 GONZO / DIGIMATION - FlyingDog

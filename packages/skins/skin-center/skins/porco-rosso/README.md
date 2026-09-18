@@ -1,23 +1,37 @@
-# Studio Ghibli · Porco Rosso（吉卜力 · 红猪侠）主题皮肤
+# porco-rosso (Porco Rosso)
 
-宫崎骏 1992 年经典动画《红猪》主题皮肤：萨伏亚 S.21 迎着晚霞破空飞行的绝美画面，搭配亚得里亚海炽红与蔚蓝复古航空调色板，内置久石让《归去不可得的日子》钢琴原声。
+English | [中文](README.zh.md)
 
-👉 **完整设计理念、视觉哲学与实现架构文档见**：[`../../docs/dsh-theme-porco-rosso.md`](../../docs/dsh-theme-porco-rosso.md)
+A fan skin themed on Studio Ghibli's classic animation *Porco Rosso* (1992): the Savoia S.21 soaring across the Adriatic Sea, with warm parchment and racing red in light mode and deep indigo stratosphere in dark mode. Complete `--dsw-*` palette remapping with WCAG AAA contrast (> 14:1).
 
----
+## Install
 
-## 特性速览
+The skin center is the only loader: install it (or the all-in-one aggregate),
+then install this skin from the [Creative Workshop](https://dsh-market.com) into
+`$DSH_HOME/skins/porco-rosso/`, and apply it in "Settings -> Skins". Switching is atomic and needs no restart.
 
-- **双巡航日夜壁纸**：
-  - 浅色模式：秘密海湾（`assets/porco001.jpg`）+ 暖沙羊皮纸光纱。
-  - 深色模式：夏日云海（`assets/porco002.jpg`）+ 午夜深蓝渐变光纱。
-- **WCAG AAA 级高对比度**：
-  - 浅色模式采用沉稳浓缩咖啡黑（`#23180f`），深色模式采用温润象牙白（`#fbf6ee`），对比度 > 14:1。
-  - 彻底修复思考文本框高度截断与颜色看不清问题，消除正文未到达时的幽灵空白条。
-- **复古黑胶双曲音乐播放器（`hooks.mjs`）**：
-  - 常驻左侧边栏底部，微型萨伏亚 S.21 炽红与黄铜黑胶唱片随旋律旋转。
-  - 完整收录红猪双经典原声曲目，支持一键切换（⏭）、快捷键与自动连播：
-    1. **Piano 灵魂主题**：久石让《帰らざる日々》（il porco rosso / `assets/bygone-days.mp3`，4分53秒）
-    2. **Chanson 经典插曲**：加藤登纪子《さくらんぼの実る頃》（Le Temps des cerises / `assets/le-temps-des-cerises.mp3`，2分54秒）
-- **100% 本地自包含**：
-  - 零远程外链依赖，离线全速加载。
+## Layout
+
+- `skin.json` — v2 manifest: `contributes.stylesheet` / `patches` / `backgroundMedia`
+  (light -> `assets/porco001.jpg`, dark -> `assets/porco002.jpg`, each with its own calibrated scrim)
+- `skin.css` — L1: base colour plus the full `--dsw-*` palette remap (light on `:root`, dark on `body[data-ds-dark-theme]`)
+- `patches.css` — L3: frosted glass panels, composer styling, custom icons (`assets/savoia-hero.svg` and `assets/porco-emblem.svg`)
+- `hooks.mjs` — runtime enhancement: dual wallpaper auto-adaptation and music player
+- `assets/` — canonical scene wallpapers, SVG icons, and audio tracks
+- `NOTICE` — artwork provenance and copyright notice
+- `LICENSE` — CC BY-NC-SA 4.0 license text
+
+## Preview
+
+Light ([preview/light.jpg](preview/light.jpg)) · Dark ([preview/dark.jpg](preview/dark.jpg))
+
+## Copyright
+
+The film, characters, and mechanical designs are from *Porco Rosso*, (c) Studio Ghibli / Hayao Miyazaki.
+The backdrop images in `assets/` are taken from official stills published by Studio Ghibli; the skin author claims no rights to them. Their use here is personal, non-commercial fan display only, and is not affiliated with or endorsed by Studio Ghibli.
+
+The skin engineering (`skin.json` / `skin.css` / `patches.css` / `hooks.mjs` and the palette remap)
+is the author's work, released under CC BY-NC-SA 4.0 — that license does NOT extend to the official artwork above. See [NOTICE](NOTICE).
+
+> © Studio Ghibli
+> © 1992 Studio Ghibli - NN

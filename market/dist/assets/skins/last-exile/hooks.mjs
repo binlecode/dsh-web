@@ -37,16 +37,9 @@ export default function defineSkinHooks() {
 
       const WALLPAPER_KEY = 'dsh.theme.last-exile.wallpaper';
       const BACKGROUNDS = [
-        { id: 'auto', label: '日夜自适应', file: '' },
-        { id: 'fleet', label: '舰队巡航', file: 'fleet.jpg' },
-        { id: 'tatiana', label: '绯红先锋', file: 'tatiana.jpg' },
-        { id: 'alvis-dark', label: '银翼夜空', file: 'alvis-dark.jpg' },
-        { id: 'grandstream', label: '风暴云海', file: 'grandstream.jpg' },
-        { id: 'canyon-dive', label: '峡谷俯冲', file: 'canyon-dive.jpg' },
-        { id: 'silvana', label: '银之战舰', file: 'silvana.jpg' },
-        { id: 'vanship', label: '晴空先锋', file: 'vanship.jpg' },
-        { id: 'dio-lucciola', label: '悠远之风', file: 'dio-lucciola.jpg' },
-        { id: 'fam-vespa', label: '银翼法姆', file: 'fam-vespa.jpg' },
+        { id: "auto", label: "日夜自适应", file: "" },
+        { id: "vanship", label: "晴空先锋 (昼)", file: "vanship.jpg" },
+        { id: "grandstream", label: "风暴夜空 (夜)", file: "grandstream.jpg" },
       ];
 
       /**
@@ -57,26 +50,12 @@ export default function defineSkinHooks() {
        */
       const VEIL_BY_THEME = {
         light: {
-          'alvis-dark.jpg': 'rgba(238, 240, 234, 0.60)',
-          'canyon-dive.jpg': 'rgba(238, 240, 234, 0.50)',
-          'dio-lucciola.jpg': 'transparent',
-          'fam-vespa.jpg': 'transparent',
-          'fleet.jpg': 'rgba(238, 240, 234, 0.45)',
-          'grandstream.jpg': 'rgba(238, 240, 234, 0.30)',
-          'silvana.jpg': 'rgba(238, 240, 234, 0.35)',
-          'tatiana.jpg': 'rgba(238, 240, 234, 0.25)',
-          'vanship.jpg': 'rgba(238, 240, 234, 0.60)',
+          "grandstream.jpg": "rgba(238, 240, 234, 0.30)",
+          "vanship.jpg": "rgba(238, 240, 234, 0.60)",
         },
         dark: {
-          'alvis-dark.jpg': 'transparent',
-          'canyon-dive.jpg': 'transparent',
-          'dio-lucciola.jpg': 'rgba(11, 22, 38, 0.65)',
-          'fam-vespa.jpg': 'rgba(11, 22, 38, 0.65)',
-          'fleet.jpg': 'transparent',
-          'grandstream.jpg': 'rgba(11, 22, 38, 0.35)',
-          'silvana.jpg': 'rgba(11, 22, 38, 0.30)',
-          'tatiana.jpg': 'rgba(11, 22, 38, 0.20)',
-          'vanship.jpg': 'transparent',
+          "grandstream.jpg": "rgba(11, 22, 38, 0.35)",
+          "vanship.jpg": "transparent",
         },
       };
 

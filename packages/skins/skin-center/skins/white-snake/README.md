@@ -1,34 +1,36 @@
-# 追光动画 · 《白蛇：缘起 + 白蛇：浮生》新国风主题皮肤
+# white-snake (White Snake)
 
-追光动画经典巨作《白蛇：缘起》与《白蛇：浮生》主题皮肤：西湖烟雨断桥相会，永州雪岭巨蟒宿命，搭配宋代素绢水墨、温润碧玉与流光冰碧东方新国风调色板。
+English | [中文](README.zh.md)
 
-👉 **完整设计理念、视觉哲学与实现架构文档见**：[`../../docs/dsh-theme-white-snake.md`](../../docs/dsh-theme-white-snake.md)
+A fan skin themed on Light Chaser Animation's oriental fantasy epic *White Snake* (2019) and *White Snake: Afloat* (2024): the romantic encounter under oil-paper umbrellas at the West Lake Broken Bridge in light mode, and destiny at the snowy Yongzhou ridges in dark mode. Features silk parchment, jade emerald, and cyan aura tones with WCAG AAA contrast (> 14:1).
 
----
+## Install
 
-## 特性速览
+The skin center is the only loader: install it (or the all-in-one aggregate),
+then install this skin from the [Creative Workshop](https://dsh-market.com) into
+`$DSH_HOME/skins/white-snake/`, and apply it in "Settings -> Skins". Switching is atomic and needs no restart.
 
-- **双极日夜超清巡航壁纸**：
-  - 浅色模式：西湖断桥烟雨（`assets/broken-bridge.jpg`）+ 素绢宣纸天青微光。
-  - 深色模式：永州雪岭巨蟒宿命（`assets/snake-destiny.jpg`）+ 寒潭玄青幽月微光。
-- **名场面壁纸直选浮层与日夜自适应（`hooks.mjs`）**：
-  - 侧边栏底部「碧玉灵簪」卡片内置 `🖼️` 直选浮层按钮，展开 2 列微缩预览面板。
-  - 覆盖 27 款追光动画官方超清名场面（《浮生》篇：大婚良缘、断桥借伞、断桥初识、夜航幽月、御风齐飞、笛韵依偎、荷塘画舫、市井烟火、万伞如海、药铺温情、临窗听雨、苏堤拂柳、烟波春晓、幽谷花海、断桥春霁、昆仑雪巅、青蛇凌波、宝青新貌；《缘起》篇：断桥烟雨、断桥远眺、何须问舟行、青白并蒂、宝青奇坊、浮生晚霞、雪岭宿命、临安晴岚、水月幽冥、灯火天河）+ 1 款 `auto` 智能换源。
-  - `localStorage` 持久化，重启后保留上次选择；`auto` 随明暗模式自动在断桥烟雨与雪岭宿命之间无缝双缓冲平滑淡入。
-- **一键明暗模式切换（`[🌙 永州夜]` / `[☀️ 西湖昼]`）**：
-  - 侧栏底卡一键直切系统昼夜模式，联动 DSH RPC 持久化，毫秒级重绘调色板。
-- **WCAG AAA 级高对比度**：
-  - 浅色模式采用徽州松烟徽墨黑（`#161e19`，对比度 14.8:1），深色模式采用月华皎洁冷玉白（`#ebf5f3`，对比度 15.7:1）。
-  - 强制透明度下限 `max(0.62, ...)`，彻底解决大模型思考链文本截断与字迹发灰问题，消除幽灵空白条。
-- **东方新国风素绢磨砂质感**：
-  - 14px 高斯模糊素绢卡片，浅色带翡翠碧玉发丝微光描边（`1px solid rgba(16, 124, 101, 0.12)`），深色带流光冰碧描边（`1px solid rgba(45, 212, 191, 0.14)`）。
-  - 思考卡片带有 3px 碧玉灵气立体光轨，正文如墨落生香。
-- **西湖留声 · 国风经典原声音乐播放器（`hooks.mjs`）**：
-  - 侧边栏底部常驻，碧玉黑胶唱片随旋律悠然旋转，受 `prefers-reduced-motion` 与页面隐藏严格保护。
-  - 完整收录追光动画官方四大金曲曲库，支持一键切歌（⏭）、音量滑块与一键静音记忆：
-    1. **舟行定情曲**：郭好为《何须问》（`assets/he-xu-wen.mp3`）
-    2. **西湖借伞原声**：郭好为《断桥初识》（`assets/broken-bridge-meeting.mp3`）
-    3. **奇门玄机原声**：郭好为《宝青坊》（`assets/baoqing-workshop.mp3`）
-    4. **雪岭宿命原声**：郭好为《诀别》（`assets/destiny-farewell.mp3`）
-- **100% 离线自包含与零侵入**：
-  - 超清壁纸、原声音频、矢量徽章与样式完全本地托管，零侵入上游宿主框架。
+## Layout
+
+- `skin.json` — v2 manifest: `contributes.stylesheet` / `patches` / `backgroundMedia`
+  (light -> `assets/broken-bridge.jpg`, dark -> `assets/snake-destiny.jpg`, each with its own calibrated scrim)
+- `skin.css` — L1: base colour plus the full `--dsw-*` palette remap (light on `:root`, dark on `body[data-ds-dark-theme]`)
+- `patches.css` — L3: oriental silk frosted panels, jade hairpin accents, custom SVGs (`assets/white-snake-emblem.svg` and `assets/white-snake-hero.svg`)
+- `hooks.mjs` — runtime enhancement: dual wallpaper auto-adaptation and music player
+- `assets/` — canonical scene wallpapers, SVG icons, and audio tracks
+- `NOTICE` — artwork provenance and copyright notice
+- `LICENSE` — CC BY-NC-SA 4.0 license text
+
+## Preview
+
+Light ([preview/light.jpg](preview/light.jpg)) · Dark ([preview/dark.jpg](preview/dark.jpg))
+
+## Copyright
+
+The animated films, characters, and concept artwork are from *White Snake* and *White Snake: Afloat*, (c) Light Chaser Animation Studios.
+The backdrop images in `assets/` are taken from official promotional stills and posters; the skin author claims no rights to them. Their use here is personal, non-commercial fan display only, and is not affiliated with or endorsed by Light Chaser Animation.
+
+The skin engineering (`skin.json` / `skin.css` / `patches.css` / `hooks.mjs` and the palette remap)
+is the author's work, released under CC BY-NC-SA 4.0 — that license does NOT extend to the official artwork above. See [NOTICE](NOTICE).
+
+> © Light Chaser Animation Studios

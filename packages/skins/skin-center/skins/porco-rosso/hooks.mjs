@@ -39,16 +39,9 @@ export default function defineSkinHooks() {
 
       const WALLPAPER_KEY = 'dsh.theme.porco-rosso.wallpaper';
       const BACKGROUNDS = [
-        { id: 'auto', label: '日夜自适应', file: '' },
-        { id: 'garden', label: '秘密花园', file: 'adriano-garden.jpg' },
-        { id: 'cove', label: '秘密海湾', file: 'porco001.jpg' },
-        { id: 'water-race', label: '掠浪竞速', file: 'water-race.jpg' },
-        { id: 'dogfight', label: '空战缠斗', file: 'adriatic-dogfight.jpg' },
-        { id: 'flight', label: '夏日云海', file: 'porco002.jpg' },
-        { id: 'sunset', label: '黄金暮色', file: 'porco007.jpg' },
-        { id: 'ghost-fleet', label: '平流天河', file: 'ghost-fleet.jpg' },
-        { id: 'squadron', label: '战隼列阵', file: 'squadron-flight.jpg' },
-        { id: 'thumb', label: '萨伏亚点赞', file: 'savoia-thumb.jpg' },
+        { id: "auto", label: "日夜自适应", file: "" },
+        { id: "cove", label: "秘密海湾 (昼)", file: "porco001.jpg" },
+        { id: "flight", label: "平流天河 (夜)", file: "porco002.jpg" },
       ];
 
       /**
@@ -59,26 +52,12 @@ export default function defineSkinHooks() {
        */
       const VEIL_BY_THEME = {
         light: {
-          'adriano-garden.jpg': 'rgba(251, 248, 241, 0.35)',
-          'adriatic-dogfight.jpg': 'rgba(251, 248, 241, 0.25)',
-          'ghost-fleet.jpg': 'rgba(251, 248, 241, 0.40)',
-          'porco001.jpg': 'rgba(251, 248, 241, 0.45)',
-          'porco002.jpg': 'rgba(251, 248, 241, 0.45)',
-          'porco007.jpg': 'rgba(251, 248, 241, 0.25)',
-          'savoia-thumb.jpg': 'rgba(251, 248, 241, 0.20)',
-          'squadron-flight.jpg': 'rgba(251, 248, 241, 0.15)',
-          'water-race.jpg': 'rgba(251, 248, 241, 0.30)',
+          "porco001.jpg": "rgba(251, 248, 241, 0.45)",
+          "porco002.jpg": "rgba(251, 248, 241, 0.45)",
         },
         dark: {
-          'adriano-garden.jpg': 'transparent',
-          'adriatic-dogfight.jpg': 'transparent',
-          'ghost-fleet.jpg': 'transparent',
-          'porco001.jpg': 'rgba(15, 20, 31, 0.30)',
-          'porco002.jpg': 'transparent',
-          'porco007.jpg': 'rgba(15, 20, 31, 0.40)',
-          'savoia-thumb.jpg': 'transparent',
-          'squadron-flight.jpg': 'transparent',
-          'water-race.jpg': 'transparent',
+          "porco001.jpg": "rgba(15, 20, 31, 0.30)",
+          "porco002.jpg": "transparent",
         },
       };
 
