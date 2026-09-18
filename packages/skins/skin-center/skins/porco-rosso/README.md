@@ -17,7 +17,7 @@ then install this skin from the [Creative Workshop](https://dsh-market.com) into
 - `skin.css` — L1: base colour plus the full `--dsw-*` palette remap (light on `:root`, dark on `body[data-ds-dark-theme]`)
 - `patches.css` — L3: frosted glass panels, composer styling, custom icons (`assets/savoia-hero.svg` and `assets/porco-emblem.svg`)
 - `hooks.mjs` — runtime enhancement: dual wallpaper auto-adaptation and music player
-- `assets/` — canonical scene wallpapers, SVG icons, and audio tracks
+- `assets/` — canonical scene wallpapers, SVG icons, and Public Domain stereo classical piano tracks (Erik Satie's Gymnopédie No. 1 & Chopin's Nocturne Op. 9 No. 2)
 - `NOTICE` — artwork provenance and copyright notice
 - `LICENSE` — CC BY-NC-SA 4.0 license text
 

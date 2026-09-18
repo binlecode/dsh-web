@@ -157,18 +157,18 @@ export default function defineSkinHooks() {
       // Music playlist
       const playlist = [
         {
-          id: 'bygone-days',
-          title: '帰らざる日々',
-          artist: '久石让',
-          tag: 'Piano',
-          file: 'bygone-days.mp3',
+          id: "satie-gymnopedie-1",
+          title: "Gymnopédie No. 1",
+          artist: "Erik Satie",
+          tag: "Piano",
+          file: "satie-gymnopedie-1.mp3",
         },
         {
-          id: 'le-temps-des-cerises',
-          title: 'さくらんぼの実る頃',
-          artist: '加藤登纪子',
-          tag: 'Chanson',
-          file: 'le-temps-des-cerises.mp3',
+          id: "chopin-nocturne-op9",
+          title: "Nocturne Op. 9 No. 2",
+          artist: "Frédéric Chopin",
+          tag: "Nocturne",
+          file: "chopin-nocturne-op9.mp3",
         },
       ];
 

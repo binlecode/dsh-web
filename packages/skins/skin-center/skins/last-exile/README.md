@@ -17,7 +17,7 @@ then install this skin from the [Creative Workshop](https://dsh-market.com) into
 - `skin.css` — L1: base colour plus the full `--dsw-*` palette remap (light on `:root`, dark on `body[data-ds-dark-theme]`)
 - `patches.css` — L3: Victorian industrial frosted panels, vanship gauge styling, custom emblem (`assets/vanship-emblem.svg`)
 - `hooks.mjs` — runtime enhancement: dual wallpaper auto-adaptation and music player
-- `assets/` — canonical scene wallpapers, SVG icons, and audio tracks
+- `assets/` — canonical scene wallpapers, SVG icons, and Public Domain / Creative Commons stereo classical piano tracks (Claude Debussy's Clair de Lune & 2nd Arabesque)
 - `NOTICE` — artwork provenance and copyright notice
 - `LICENSE` — CC BY-NC-SA 4.0 license text
 

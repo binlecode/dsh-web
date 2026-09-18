@@ -17,7 +17,7 @@ then install this skin from the [Creative Workshop](https://dsh-market.com) into
 - `skin.css` — L1: base colour plus the full `--dsw-*` palette remap (light on `:root`, dark on `body[data-ds-dark-theme]`)
 - `patches.css` — L3: oriental silk frosted panels, jade hairpin accents, custom SVGs (`assets/white-snake-emblem.svg` and `assets/white-snake-hero.svg`)
 - `hooks.mjs` — runtime enhancement: dual wallpaper auto-adaptation and music player
-- `assets/` — canonical scene wallpapers, SVG icons, and audio tracks
+- `assets/` — canonical scene wallpapers, SVG icons, and Public Domain stereo ambient piano tracks (Erik Satie's Gnossienne No. 1 & Gnossienne No. 3)
 - `NOTICE` — artwork provenance and copyright notice
 - `LICENSE` — CC BY-NC-SA 4.0 license text
 

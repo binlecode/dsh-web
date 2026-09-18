@@ -152,18 +152,18 @@ export default function defineSkinHooks() {
 
       const playlist = [
         {
-          id: 'cloud-age-symphony',
-          title: 'Cloud Age Symphony',
-          artist: '沖野俊太郎',
-          tag: 'OP',
-          file: 'cloud-age-symphony.mp3',
+          id: "debussy-clair-de-lune",
+          title: "Clair de Lune",
+          artist: "Claude Debussy",
+          tag: "Nocturne",
+          file: "debussy-clair-de-lune.mp3",
         },
         {
-          id: 'over-the-sky',
-          title: 'Over The Sky',
-          artist: 'Hitomi',
-          tag: 'ED',
-          file: 'over-the-sky.mp3',
+          id: "debussy-arabesque-2",
+          title: "2nd Arabesque",
+          artist: "Claude Debussy",
+          tag: "Arabesque",
+          file: "debussy-arabesque-2.mp3",
         },
       ];
 

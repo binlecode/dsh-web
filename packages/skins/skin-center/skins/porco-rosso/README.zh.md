@@ -17,7 +17,7 @@
 - `skin.css` — L1：基础色 + 全部 `--dsw-*` 调色板重映射（亮色 `:root`、暗色 `body[data-ds-dark-theme]`）
 - `patches.css` — L3：磨砂透光面板、输入框定制、界面矢量图标（`assets/savoia-hero.svg` 与 `assets/porco-emblem.svg`）
 - `hooks.mjs` — 运行时增强：昼夜壁纸平滑过渡与原声播放器
-- `assets/` — 核心昼夜壁纸、矢量图标与原声音频
+- `assets/` — 核心昼夜壁纸、矢量图标与公有领域立体声古典氛围钢琴（萨蒂《Gymnopédie No. 1》与肖邦《降E大调夜曲》）
 - `NOTICE` — 角色与美术素材版权出处声明
 - `LICENSE` — CC BY-NC-SA 4.0 许可证文本
 

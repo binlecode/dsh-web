@@ -154,18 +154,18 @@ export default function defineSkinHooks() {
       // Music playlist
       const playlist = [
         {
-          id: 'he-xu-wen',
-          title: '何须问',
-          artist: '郭好为',
-          tag: '定情',
-          file: 'he-xu-wen.mp3',
+          id: "satie-gnossienne-1",
+          title: "Gnossienne No. 1",
+          artist: "Erik Satie",
+          tag: "禅意",
+          file: "satie-gnossienne-1.mp3",
         },
         {
-          id: 'broken-bridge-meeting',
-          title: '断桥初识',
-          artist: '郭好为',
-          tag: '原声',
-          file: 'broken-bridge-meeting.mp3',
+          id: "satie-gnossienne-3",
+          title: "Gnossienne No. 3",
+          artist: "Erik Satie",
+          tag: "空灵",
+          file: "satie-gnossienne-3.mp3",
         },
       ];
 
