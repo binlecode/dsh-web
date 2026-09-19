@@ -462,6 +462,35 @@ window.SKIN_MANIFEST = {
       }
     },
     {
+      "id": "island-life",
+      "name": "无人岛生活",
+      "nameEn": "Island Life",
+      "author": "wertyq111",
+      "tagline": "海岛白昼 / 星空夜景插画 · 奶油木纹面板 · 薄荷胶囊按钮",
+      "description": "致敬「动森」氛围的原创海岛皮肤：浅色模式是阳光海滩，深色模式是同构图的星空夜景；奶油米白面板、暖棕文字、薄荷青绿主色，按钮与输入卡带游戏按键式立体底影。纯 CSS，无 hooks。",
+      "accent": "#19c8b9",
+      "preview": {
+        "light": "assets/skins/island-life/preview/light.jpg",
+        "dark": "assets/skins/island-life/preview/dark.jpg"
+      },
+      "contributes": {
+        "stylesheet": "skin.css",
+        "patches": "patches.css",
+        "backgroundMedia": {
+          "light": {
+            "type": "image",
+            "src": "assets/skins/island-life/assets/island-day.webp",
+            "scrim": "linear-gradient(rgba(248, 248, 240, 0.18) 0%, rgba(248, 246, 236, 0.34) 55%, rgba(247, 243, 223, 0.46) 100%)"
+          },
+          "dark": {
+            "type": "image",
+            "src": "assets/skins/island-life/assets/island-night.webp",
+            "scrim": "linear-gradient(rgba(14, 18, 38, 0.22) 0%, rgba(16, 20, 40, 0.34) 60%, rgba(18, 20, 36, 0.46) 100%)"
+          }
+        }
+      }
+    },
+    {
       "id": "observatory",
       "name": "天文台",
       "nameEn": "Observatory",
@@ -690,6 +719,23 @@ window.SKIN_MANIFEST = {
       }
     },
     {
+      "id": "pixel-anime",
+      "name": "二次元像素",
+      "nameEn": "Anime Pixel",
+      "author": "stushansusu",
+      "tagline": "椰影沙滩 · 银河星海 · 棋盘抖动 · 精灵描边",
+      "description": "同一个海岸的两段时间。明亮是白昼的沙滩椰林：暖沙地、湿沙的水痕、断断续续的浪线、近岸泛青的海，椰子树用二十格高的点阵剪影立在沙上，天上挂着一颗带八条光芒的阶梯太阳和四朵点阵云；暗色是深夜的星空银河：夜空蓝黑、二百三十颗点阵星加一条由淡点堆出来的银河拱、右上角一枚下弦月，海平线往上是月亮照亮的暖褐滩涂，水里压着几道月光与星光。两套都不靠渐变——明暗是 8px 一格的棋盘抖动堆出来的，像素画里没有平滑 ramp。所有圆角归零（像素画只有直角和 45 度），每张卡片一圈 2px 精灵描边加 4px 实心投影。整片海岸画在画布层（沙 286px、海 134px，锚在底边），而画布与机壳之间不留任何中间层：bg-base 全透明，会话背景与主页背景是同一幅画。侧栏的文件夹行是沙台、选中行下缘压一道碎浪，输入卡下缘也是碎浪、发送键是落日橙（夜里银河紫），工具行与用户气泡共用同一个实心底色。",
+      "accent": "#0F7182",
+      "preview": {
+        "light": "assets/skins/pixel-anime/preview/light.jpg",
+        "dark": "assets/skins/pixel-anime/preview/dark.jpg"
+      },
+      "contributes": {
+        "stylesheet": "skin.css",
+        "patches": "patches.css"
+      }
+    },
+    {
       "id": "black-gold",
       "name": "暗夜鎏金",
       "nameEn": "Black Gold Gilded",
@@ -778,6 +824,35 @@ window.SKIN_MANIFEST = {
       },
       "contributes": {
         "stylesheet": "skin.css"
+      }
+    },
+    {
+      "id": "remiel-starlit",
+      "name": "蕾米埃尔·星翎",
+      "nameEn": "Remiel Starlit",
+      "author": "oh-wang",
+      "tagline": "粉樱冰翎，明暗皆星光",
+      "description": "以蕾米埃尔的樱粉发色、冰蓝羽翼与夜靛礼装构成半透明玻璃质感。浅色如晨雾羽光，深色以紫红与靛黑承接更沉浸的场景背景。",
+      "accent": "#d75b8d",
+      "preview": {
+        "light": "assets/skins/remiel-starlit/preview/light.jpg",
+        "dark": "assets/skins/remiel-starlit/preview/dark.jpg"
+      },
+      "contributes": {
+        "stylesheet": "skin.css",
+        "patches": "patches.css",
+        "backgroundMedia": {
+          "light": {
+            "type": "image",
+            "src": "assets/skins/remiel-starlit/assets/remiel-calm.jpg",
+            "scrim": "linear-gradient(rgba(255, 247, 252, 0.08) 0%, rgba(255, 247, 252, 0.08) 100%)"
+          },
+          "dark": {
+            "type": "image",
+            "src": "assets/skins/remiel-starlit/assets/remiel-nocturne.jpg",
+            "scrim": "linear-gradient(rgba(18, 10, 25, 0.32) 0%, rgba(18, 10, 25, 0.32) 100%)"
+          }
+        }
       }
     },
     {

@@ -57,6 +57,7 @@ describe('liangshen preset composition', () => {
     expect(persona).toContain('Thinking Disruption: Do not repeat reasoning on the same hypothesis more than twice')
     expect(persona).toContain('immediately close </think> and call native inspection tools')
     expect(persona).toContain('Action-Oriented: Thinking must focus solely on determining the next concrete operation')
+    expect(persona).toContain('Parallel Inspection: When multiple independent inspections, searches, or checks are needed')
     expect(persona).toContain('Follow YAGNI and the PDCA loop')
     expect(persona).toContain('Do not write redundant comments.')
     expect(persona).not.toContain('text:')
@@ -75,42 +76,35 @@ describe('liangshen preset composition', () => {
     expect(row('tool-catalog')).toContain('descriptionMaxLength: 200')
   })
 
-  it("declares the 'ptc' presentation with gentle paging, and no retired keys", () => {
-    expect(row('tool-catalog')).toContain("presentation: 'ptc'")
-    expect(row('tool-catalog')).toContain("pagedToolPatterns: ['mcp__*']")
+  it("declares the 'both' presentation with no paged patterns by default, and no retired keys", () => {
+    expect(row('tool-catalog')).toContain("presentation: 'both'")
+    expect(row('tool-catalog')).toContain("pagedToolPatterns: []")
     expect(row('tool-catalog')).not.toContain('ptcPresentation')
     expect(row('tool-catalog')).not.toContain('anchorTools')
   })
 
-  it('mounts the tool-activate and working-context preset plugins', () => {
-    expect(row('tool-activate')).toContain('name: ./tool-activate.mjs')
+  it('mounts working-context and does not mount tool-activate', () => {
+    expect(row('tool-activate')).toBe('')
     expect(row('working-context')).toContain('name: ./working-context.mjs')
   })
 
-  it('mounts the phase-aware reasoning-effort plugin with its two levels', () => {
-    const effort = row('reasoning-effort')
-    expect(effort).toContain('name: ./reasoning-effort.mjs')
-    // The phase switch ships OFF: taking over a session's reasoning level is
-    // something the operator opts into, not something they discover.
-    expect(effort).toContain('autoEffortByPhase: false')
-    expect(effort).toContain("planningEffort: 'high'")
-    expect(effort).toContain("executionEffort: 'low'")
-    expect(effort).toContain("reviewEffort: 'high'")
+  it('does not mount reasoning-effort plugin', () => {
+    expect(row('reasoning-effort')).toBe('')
   })
 
-  it('keeps the native and both presentation variants structurally valid', () => {
-    for (const mode of ['native', 'both']) {
-      const variant = preset.replace("presentation: 'ptc'", `presentation: '${mode}'`)
+  it('keeps the native and ptc presentation variants structurally valid', () => {
+    for (const mode of ['native', 'ptc']) {
+      const variant = preset.replace("presentation: 'both'", `presentation: '${mode}'`)
       expect(variant).not.toBe(preset)
       expect(validateAgentCordis(variant), mode).toEqual([])
     }
   })
 
-  it('ships the aggressive tool-result pruning budgets', () => {
+  it('ships the balanced tool-result pruning budgets', () => {
     const pruner = row('compaction')
-    expect(pruner).toContain('thresholdChars: 4096')
-    expect(pruner).toContain('headChars: 1500')
-    expect(pruner).toContain('tailChars: 500')
+    expect(pruner).toContain('thresholdChars: 8192')
+    expect(pruner).toContain('headChars: 4096')
+    expect(pruner).toContain('tailChars: 1024')
   })
 
   it('keeps run_code the only model-authored orchestration surface', () => {

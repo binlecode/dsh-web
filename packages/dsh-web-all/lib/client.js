@@ -10173,12 +10173,59 @@ window.__ModuleLoader__.load({
 		}
 		//#endregion
 		//#region ../dsh-task-board/src/client/plugin-card-seat.ts
-		/** Whether the running host declares the official keyed plugin-card seat. */
-		function officialPluginCardSeatDeclared$4(ctx) {
-			const spec = ctx.slots.spec;
-			if (typeof spec !== "function") return false;
+		/**
+		* Family plugin-card seat.
+		*
+		* A family plugin contributes its settings card to whichever plugin-card seat
+		* the running host actually renders:
+		*
+		* - `web-ui.plugin.item` — the list seat declared by the dsh-web-settings
+		*   group section (this family's own first-level "Web UI plugins" section);
+		* - `settings.plugin.item` — the official keyed seat of the harness's
+		*   `ui-settings-plugins` tab, keyed by the settings namespace the card edits.
+		*
+		* SEAT SELECTION IS NOT A DECLARATION PROBE. The official `ui-settings-plugins`
+		* row belongs to the harness bundle and its `configurable` tab always declares
+		* `settings.plugin.item` before any external plugin's `apply()` runs, so
+		* "is the official seat declared?" answers yes even in the deployment whose
+		* whole point is the family group. Choosing on that probe sends every family
+		* card to the official Plugins tab and leaves the group's own section
+		* permanently empty — the family of reports where the section renders its
+		* heading and zero cards.
+		*
+		* The signal that actually distinguishes the two deployments is whether
+		* dsh-web-settings is loaded: it is the package that owns the group section and
+		* it publishes the `webUiSettings` service during `apply()`, which every
+		* family plugin already reads for its settings scope. Group loaded -> the family
+		* seat; group absent -> the official seat.
+		*
+		* The decision is re-evaluated on every `slots/changed` because the group may
+		* apply after this plugin (the family aggregate orders it first, a profile that
+		* installs the group separately need not): the initial contribution goes to the
+		* official seat, then moves to the family seat the moment the group's section
+		* registers. The entry is disposed before the replacement is registered, so a
+		* card is never in two seats at once.
+		*
+		* The shared tree has no client-SDK dependency, so this module reads its
+		* context through the structural shape below; callers pass the plugin's own
+		* `ctx`.
+		*/
+		/** The family list seat key. */
+		const FAMILY_PLUGIN_CARD_SEAT$4 = "web-ui.plugin.item";
+		/** The official keyed plugin-card seat key. */
+		const OFFICIAL_PLUGIN_CARD_SEAT$4 = "settings.plugin.item";
+		/** The service dsh-web-settings publishes while it is loaded. */
+		const FAMILY_GROUP_SERVICE$4 = "webUiSettings";
+		/**
+		* Whether the family group (dsh-web-settings) is loaded in this page. The
+		* service is the group package's own contract, so the probe cannot be fooled
+		* by a harness release that starts declaring the official seat differently.
+		*/
+		function familyGroupLoaded$4(ctx) {
+			const get = ctx.get;
+			if (typeof get !== "function") return false;
 			try {
-				return spec.call(ctx.slots, "settings.plugin.item") !== void 0;
+				return get.call(ctx, FAMILY_GROUP_SERVICE$4) !== void 0;
 			} catch {
 				return false;
 			}
@@ -10190,46 +10237,62 @@ window.__ModuleLoader__.load({
 			} catch {}
 		}
 		/**
-		* Contribute one family plugin card to the seat this host declares.
+		* Contribute one family plugin card to the seat this host renders, following
+		* the group if it loads later. The entry is disposed and re-registered on a
+		* seat change, never duplicated.
 		* @param ctx - client context (its slot registry decides the seat).
 		* @param seat - the card contribution.
 		*/
 		function installPluginCard$4(ctx, seat) {
 			const slots = ctx.slots;
 			const component = seat.component;
-			if (officialPluginCardSeatDeclared$4(ctx)) {
-				const inject = seat.inject;
-				slots.inject("settings.plugin.item", () => {
-					try {
-						return slots.register({
-							name: "settings.plugin.item",
-							key: seat.namespace,
-							locale: seat.locale,
-							...seat.inject === void 0 ? {} : { inject }
-						}, component);
-					} catch (error) {
-						warnRefusedSeat$4("settings.plugin.item", error);
-						return () => {};
-					}
-				});
-				return;
-			}
 			const inject = seat.inject;
-			slots.inject("web-ui.plugin.item", () => {
+			let dispose;
+			let current;
+			/**
+			* Re-entrancy latch. The registry emits a change event synchronously from
+			* inside both `register` and the previous entry's disposer, so an unguarded
+			* reconcile would re-enter itself mid-move and register the card twice into
+			* the seat it is leaving ("already has an entry for key ...").
+			*/
+			let reconciling = false;
+			/** Reconcile the contribution with the currently live seat (no-op when unchanged). */
+			const reconcile = () => {
+				if (reconciling) return;
+				const target = familyGroupLoaded$4(ctx) ? FAMILY_PLUGIN_CARD_SEAT$4 : OFFICIAL_PLUGIN_CARD_SEAT$4;
+				if (current === target) return;
+				reconciling = true;
+				const previous = dispose;
+				dispose = void 0;
+				current = void 0;
+				previous?.();
 				try {
-					return slots.register({
-						name: "web-ui.plugin.item",
+					dispose = slots.register(target === "web-ui.plugin.item" ? {
+						name: FAMILY_PLUGIN_CARD_SEAT$4,
 						id: seat.id,
 						...seat.order === void 0 ? {} : { order: seat.order },
 						...seat.label === void 0 ? {} : { label: seat.label },
 						locale: seat.locale,
 						...seat.inject === void 0 ? {} : { inject }
+					} : {
+						name: OFFICIAL_PLUGIN_CARD_SEAT$4,
+						key: seat.namespace,
+						locale: seat.locale,
+						...seat.inject === void 0 ? {} : { inject }
 					}, component);
+					current = target;
 				} catch (error) {
-					warnRefusedSeat$4("web-ui.plugin.item", error);
-					return () => {};
+					warnRefusedSeat$4(target, error);
+				} finally {
+					reconciling = false;
 				}
-			});
+			};
+			if (typeof ctx.on === "function") try {
+				ctx.on("slots/changed", () => {
+					reconcile();
+				});
+			} catch {}
+			reconcile();
 		}
 		//#endregion
 		//#region ../dsh-task-board/src/client/index.ts
@@ -17737,12 +17800,59 @@ window.__ModuleLoader__.load({
 		}
 		//#endregion
 		//#region ../dsh-remote-web-ui/src/client/plugin-card-seat.ts
-		/** Whether the running host declares the official keyed plugin-card seat. */
-		function officialPluginCardSeatDeclared$3(ctx) {
-			const spec = ctx.slots.spec;
-			if (typeof spec !== "function") return false;
+		/**
+		* Family plugin-card seat.
+		*
+		* A family plugin contributes its settings card to whichever plugin-card seat
+		* the running host actually renders:
+		*
+		* - `web-ui.plugin.item` — the list seat declared by the dsh-web-settings
+		*   group section (this family's own first-level "Web UI plugins" section);
+		* - `settings.plugin.item` — the official keyed seat of the harness's
+		*   `ui-settings-plugins` tab, keyed by the settings namespace the card edits.
+		*
+		* SEAT SELECTION IS NOT A DECLARATION PROBE. The official `ui-settings-plugins`
+		* row belongs to the harness bundle and its `configurable` tab always declares
+		* `settings.plugin.item` before any external plugin's `apply()` runs, so
+		* "is the official seat declared?" answers yes even in the deployment whose
+		* whole point is the family group. Choosing on that probe sends every family
+		* card to the official Plugins tab and leaves the group's own section
+		* permanently empty — the family of reports where the section renders its
+		* heading and zero cards.
+		*
+		* The signal that actually distinguishes the two deployments is whether
+		* dsh-web-settings is loaded: it is the package that owns the group section and
+		* it publishes the `webUiSettings` service during `apply()`, which every
+		* family plugin already reads for its settings scope. Group loaded -> the family
+		* seat; group absent -> the official seat.
+		*
+		* The decision is re-evaluated on every `slots/changed` because the group may
+		* apply after this plugin (the family aggregate orders it first, a profile that
+		* installs the group separately need not): the initial contribution goes to the
+		* official seat, then moves to the family seat the moment the group's section
+		* registers. The entry is disposed before the replacement is registered, so a
+		* card is never in two seats at once.
+		*
+		* The shared tree has no client-SDK dependency, so this module reads its
+		* context through the structural shape below; callers pass the plugin's own
+		* `ctx`.
+		*/
+		/** The family list seat key. */
+		const FAMILY_PLUGIN_CARD_SEAT$3 = "web-ui.plugin.item";
+		/** The official keyed plugin-card seat key. */
+		const OFFICIAL_PLUGIN_CARD_SEAT$3 = "settings.plugin.item";
+		/** The service dsh-web-settings publishes while it is loaded. */
+		const FAMILY_GROUP_SERVICE$3 = "webUiSettings";
+		/**
+		* Whether the family group (dsh-web-settings) is loaded in this page. The
+		* service is the group package's own contract, so the probe cannot be fooled
+		* by a harness release that starts declaring the official seat differently.
+		*/
+		function familyGroupLoaded$3(ctx) {
+			const get = ctx.get;
+			if (typeof get !== "function") return false;
 			try {
-				return spec.call(ctx.slots, "settings.plugin.item") !== void 0;
+				return get.call(ctx, FAMILY_GROUP_SERVICE$3) !== void 0;
 			} catch {
 				return false;
 			}
@@ -17754,46 +17864,62 @@ window.__ModuleLoader__.load({
 			} catch {}
 		}
 		/**
-		* Contribute one family plugin card to the seat this host declares.
+		* Contribute one family plugin card to the seat this host renders, following
+		* the group if it loads later. The entry is disposed and re-registered on a
+		* seat change, never duplicated.
 		* @param ctx - client context (its slot registry decides the seat).
 		* @param seat - the card contribution.
 		*/
 		function installPluginCard$3(ctx, seat) {
 			const slots = ctx.slots;
 			const component = seat.component;
-			if (officialPluginCardSeatDeclared$3(ctx)) {
-				const inject = seat.inject;
-				slots.inject("settings.plugin.item", () => {
-					try {
-						return slots.register({
-							name: "settings.plugin.item",
-							key: seat.namespace,
-							locale: seat.locale,
-							...seat.inject === void 0 ? {} : { inject }
-						}, component);
-					} catch (error) {
-						warnRefusedSeat$3("settings.plugin.item", error);
-						return () => {};
-					}
-				});
-				return;
-			}
 			const inject = seat.inject;
-			slots.inject("web-ui.plugin.item", () => {
+			let dispose;
+			let current;
+			/**
+			* Re-entrancy latch. The registry emits a change event synchronously from
+			* inside both `register` and the previous entry's disposer, so an unguarded
+			* reconcile would re-enter itself mid-move and register the card twice into
+			* the seat it is leaving ("already has an entry for key ...").
+			*/
+			let reconciling = false;
+			/** Reconcile the contribution with the currently live seat (no-op when unchanged). */
+			const reconcile = () => {
+				if (reconciling) return;
+				const target = familyGroupLoaded$3(ctx) ? FAMILY_PLUGIN_CARD_SEAT$3 : OFFICIAL_PLUGIN_CARD_SEAT$3;
+				if (current === target) return;
+				reconciling = true;
+				const previous = dispose;
+				dispose = void 0;
+				current = void 0;
+				previous?.();
 				try {
-					return slots.register({
-						name: "web-ui.plugin.item",
+					dispose = slots.register(target === "web-ui.plugin.item" ? {
+						name: FAMILY_PLUGIN_CARD_SEAT$3,
 						id: seat.id,
 						...seat.order === void 0 ? {} : { order: seat.order },
 						...seat.label === void 0 ? {} : { label: seat.label },
 						locale: seat.locale,
 						...seat.inject === void 0 ? {} : { inject }
+					} : {
+						name: OFFICIAL_PLUGIN_CARD_SEAT$3,
+						key: seat.namespace,
+						locale: seat.locale,
+						...seat.inject === void 0 ? {} : { inject }
 					}, component);
+					current = target;
 				} catch (error) {
-					warnRefusedSeat$3("web-ui.plugin.item", error);
-					return () => {};
+					warnRefusedSeat$3(target, error);
+				} finally {
+					reconciling = false;
 				}
-			});
+			};
+			if (typeof ctx.on === "function") try {
+				ctx.on("slots/changed", () => {
+					reconcile();
+				});
+			} catch {}
+			reconcile();
 		}
 		//#endregion
 		//#region ../dsh-remote-web-ui/src/client/index.ts
@@ -40993,12 +41119,59 @@ window.__ModuleLoader__.load({
 		}
 		//#endregion
 		//#region ../dsh-tool-describe-image/src/client/plugin-card-seat.ts
-		/** Whether the running host declares the official keyed plugin-card seat. */
-		function officialPluginCardSeatDeclared$2(ctx) {
-			const spec = ctx.slots.spec;
-			if (typeof spec !== "function") return false;
+		/**
+		* Family plugin-card seat.
+		*
+		* A family plugin contributes its settings card to whichever plugin-card seat
+		* the running host actually renders:
+		*
+		* - `web-ui.plugin.item` — the list seat declared by the dsh-web-settings
+		*   group section (this family's own first-level "Web UI plugins" section);
+		* - `settings.plugin.item` — the official keyed seat of the harness's
+		*   `ui-settings-plugins` tab, keyed by the settings namespace the card edits.
+		*
+		* SEAT SELECTION IS NOT A DECLARATION PROBE. The official `ui-settings-plugins`
+		* row belongs to the harness bundle and its `configurable` tab always declares
+		* `settings.plugin.item` before any external plugin's `apply()` runs, so
+		* "is the official seat declared?" answers yes even in the deployment whose
+		* whole point is the family group. Choosing on that probe sends every family
+		* card to the official Plugins tab and leaves the group's own section
+		* permanently empty — the family of reports where the section renders its
+		* heading and zero cards.
+		*
+		* The signal that actually distinguishes the two deployments is whether
+		* dsh-web-settings is loaded: it is the package that owns the group section and
+		* it publishes the `webUiSettings` service during `apply()`, which every
+		* family plugin already reads for its settings scope. Group loaded -> the family
+		* seat; group absent -> the official seat.
+		*
+		* The decision is re-evaluated on every `slots/changed` because the group may
+		* apply after this plugin (the family aggregate orders it first, a profile that
+		* installs the group separately need not): the initial contribution goes to the
+		* official seat, then moves to the family seat the moment the group's section
+		* registers. The entry is disposed before the replacement is registered, so a
+		* card is never in two seats at once.
+		*
+		* The shared tree has no client-SDK dependency, so this module reads its
+		* context through the structural shape below; callers pass the plugin's own
+		* `ctx`.
+		*/
+		/** The family list seat key. */
+		const FAMILY_PLUGIN_CARD_SEAT$2 = "web-ui.plugin.item";
+		/** The official keyed plugin-card seat key. */
+		const OFFICIAL_PLUGIN_CARD_SEAT$2 = "settings.plugin.item";
+		/** The service dsh-web-settings publishes while it is loaded. */
+		const FAMILY_GROUP_SERVICE$2 = "webUiSettings";
+		/**
+		* Whether the family group (dsh-web-settings) is loaded in this page. The
+		* service is the group package's own contract, so the probe cannot be fooled
+		* by a harness release that starts declaring the official seat differently.
+		*/
+		function familyGroupLoaded$2(ctx) {
+			const get = ctx.get;
+			if (typeof get !== "function") return false;
 			try {
-				return spec.call(ctx.slots, "settings.plugin.item") !== void 0;
+				return get.call(ctx, FAMILY_GROUP_SERVICE$2) !== void 0;
 			} catch {
 				return false;
 			}
@@ -41010,46 +41183,62 @@ window.__ModuleLoader__.load({
 			} catch {}
 		}
 		/**
-		* Contribute one family plugin card to the seat this host declares.
+		* Contribute one family plugin card to the seat this host renders, following
+		* the group if it loads later. The entry is disposed and re-registered on a
+		* seat change, never duplicated.
 		* @param ctx - client context (its slot registry decides the seat).
 		* @param seat - the card contribution.
 		*/
 		function installPluginCard$2(ctx, seat) {
 			const slots = ctx.slots;
 			const component = seat.component;
-			if (officialPluginCardSeatDeclared$2(ctx)) {
-				const inject = seat.inject;
-				slots.inject("settings.plugin.item", () => {
-					try {
-						return slots.register({
-							name: "settings.plugin.item",
-							key: seat.namespace,
-							locale: seat.locale,
-							...seat.inject === void 0 ? {} : { inject }
-						}, component);
-					} catch (error) {
-						warnRefusedSeat$2("settings.plugin.item", error);
-						return () => {};
-					}
-				});
-				return;
-			}
 			const inject = seat.inject;
-			slots.inject("web-ui.plugin.item", () => {
+			let dispose;
+			let current;
+			/**
+			* Re-entrancy latch. The registry emits a change event synchronously from
+			* inside both `register` and the previous entry's disposer, so an unguarded
+			* reconcile would re-enter itself mid-move and register the card twice into
+			* the seat it is leaving ("already has an entry for key ...").
+			*/
+			let reconciling = false;
+			/** Reconcile the contribution with the currently live seat (no-op when unchanged). */
+			const reconcile = () => {
+				if (reconciling) return;
+				const target = familyGroupLoaded$2(ctx) ? FAMILY_PLUGIN_CARD_SEAT$2 : OFFICIAL_PLUGIN_CARD_SEAT$2;
+				if (current === target) return;
+				reconciling = true;
+				const previous = dispose;
+				dispose = void 0;
+				current = void 0;
+				previous?.();
 				try {
-					return slots.register({
-						name: "web-ui.plugin.item",
+					dispose = slots.register(target === "web-ui.plugin.item" ? {
+						name: FAMILY_PLUGIN_CARD_SEAT$2,
 						id: seat.id,
 						...seat.order === void 0 ? {} : { order: seat.order },
 						...seat.label === void 0 ? {} : { label: seat.label },
 						locale: seat.locale,
 						...seat.inject === void 0 ? {} : { inject }
+					} : {
+						name: OFFICIAL_PLUGIN_CARD_SEAT$2,
+						key: seat.namespace,
+						locale: seat.locale,
+						...seat.inject === void 0 ? {} : { inject }
 					}, component);
+					current = target;
 				} catch (error) {
-					warnRefusedSeat$2("web-ui.plugin.item", error);
-					return () => {};
+					warnRefusedSeat$2(target, error);
+				} finally {
+					reconciling = false;
 				}
-			});
+			};
+			if (typeof ctx.on === "function") try {
+				ctx.on("slots/changed", () => {
+					reconcile();
+				});
+			} catch {}
+			reconcile();
 		}
 		//#endregion
 		//#region ../dsh-tool-describe-image/src/client/index.ts
@@ -42377,13 +42566,6 @@ window.__ModuleLoader__.load({
 			"native",
 			"both"
 		];
-		/** Reasoning levels the DeepSeek adapter declares (mirrors the Host schema). */
-		const EFFORT_CHOICES = [
-			"off",
-			"low",
-			"high",
-			"max"
-		];
 		/** Bridges the `dsh-liangshen` scope onto the card's staged form. */
 		var LiangShenSettingsCardController = class {
 			form;
@@ -42393,11 +42575,7 @@ window.__ModuleLoader__.load({
 				this.form = new CardForm$1(scope, [
 					booleanField$1("enabled"),
 					booleanField$1("announceToAgent"),
-					choiceField("presentation", PRESENTATION_CHOICES),
-					booleanField$1("autoEffortByPhase"),
-					choiceField("planningEffort", EFFORT_CHOICES),
-					choiceField("executionEffort", EFFORT_CHOICES),
-					choiceField("reviewEffort", EFFORT_CHOICES)
+					choiceField("presentation", PRESENTATION_CHOICES)
 				]);
 				this.store = this.form.bind(() => this.projection());
 			}
@@ -42406,11 +42584,7 @@ window.__ModuleLoader__.load({
 					...this.form.shell(),
 					enabled: this.form.field("enabled"),
 					announceToAgent: this.form.field("announceToAgent"),
-					presentation: this.form.field("presentation"),
-					autoEffortByPhase: this.form.field("autoEffortByPhase"),
-					planningEffort: this.form.field("planningEffort"),
-					executionEffort: this.form.field("executionEffort"),
-					reviewEffort: this.form.field("reviewEffort")
+					presentation: this.form.field("presentation")
 				};
 			}
 			/**
@@ -42443,10 +42617,6 @@ window.__ModuleLoader__.load({
 				disabled: !state.writable,
 				inheritLabel: t("settings.inherit")
 			};
-			const effortChoices = EFFORT_CHOICES.map((choice) => ({
-				value: choice,
-				label: t(`effort.${choice}`)
-			}));
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(PluginSettingsCard$1, {
 				t,
 				titleKey: "settings.title",
@@ -42502,63 +42672,6 @@ window.__ModuleLoader__.load({
 						onReset: () => {
 							props.resetField("presentation");
 						}
-					}),
-					/* @__PURE__ */ (0, react_jsx_runtime.jsx)(BooleanField$1, {
-						id: "settings-liangshen-auto-effort",
-						label: t("settings.autoEffortByPhase"),
-						hint: t("settings.autoEffortByPhaseHint"),
-						onLabel: t("settings.on"),
-						offLabel: t("settings.off"),
-						...fieldProps,
-						...state.autoEffortByPhase,
-						onEdit: (text) => {
-							props.edit("autoEffortByPhase", text);
-						},
-						onReset: () => {
-							props.resetField("autoEffortByPhase");
-						}
-					}),
-					/* @__PURE__ */ (0, react_jsx_runtime.jsx)(ChoiceField, {
-						id: "settings-liangshen-planning-effort",
-						label: t("settings.planningEffort"),
-						hint: t("settings.planningEffortHint"),
-						choices: effortChoices,
-						...fieldProps,
-						...state.planningEffort,
-						onEdit: (text) => {
-							props.edit("planningEffort", text);
-						},
-						onReset: () => {
-							props.resetField("planningEffort");
-						}
-					}),
-					/* @__PURE__ */ (0, react_jsx_runtime.jsx)(ChoiceField, {
-						id: "settings-liangshen-execution-effort",
-						label: t("settings.executionEffort"),
-						hint: t("settings.executionEffortHint"),
-						choices: effortChoices,
-						...fieldProps,
-						...state.executionEffort,
-						onEdit: (text) => {
-							props.edit("executionEffort", text);
-						},
-						onReset: () => {
-							props.resetField("executionEffort");
-						}
-					}),
-					/* @__PURE__ */ (0, react_jsx_runtime.jsx)(ChoiceField, {
-						id: "settings-liangshen-review-effort",
-						label: t("settings.reviewEffort"),
-						hint: t("settings.reviewEffortHint"),
-						choices: effortChoices,
-						...fieldProps,
-						...state.reviewEffort,
-						onEdit: (text) => {
-							props.edit("reviewEffort", text);
-						},
-						onReset: () => {
-							props.resetField("reviewEffort");
-						}
 					})
 				]
 			});
@@ -42588,21 +42701,13 @@ window.__ModuleLoader__.load({
 			"burst.line1": "三秒，三辈子的代码",
 			"burst.line2": "文言文 · 二进制 · 摩斯电码",
 			"settings.title": "梁神模式",
-			"settings.description": "控制本插件、工具面呈现方式与分阶段推理档位。",
+			"settings.description": "控制本插件与工具面呈现方式。",
 			"settings.enabled": "启用梁神模式",
 			"settings.enabledHint": "关闭后预设同步与 agent 公告都不执行。",
 			"settings.announceToAgent": "向 agent 公告本插件",
 			"settings.announceToAgentHint": "开启后向每一轮 agent 系统提示注入本插件公告；默认关闭以保持提示词干净。",
 			"settings.presentation": "工具面呈现方式",
 			"settings.presentationHint": "写入同步后的预设：ptc 把 wire 收拢为 run_code；native 保持原生工具清单；both 让两者同驻。改动需重启 DSH 生效。",
-			"settings.autoEffortByPhase": "按阶段自动调整推理档位",
-			"settings.autoEffortByPhaseHint": "关闭（默认）时不干预请求，模型选择器里的档位全程有效；开启后由下面的分阶段档位接管。",
-			"settings.planningEffort": "规划档位",
-			"settings.planningEffortHint": "规划模式成形工作、或首轮尚未确定任务形态时使用。仅在自动调整开启时生效。",
-			"settings.executionEffort": "执行档位",
-			"settings.executionEffortHint": "单步执行轮次使用（读文件、改代码、跑命令）。仅在自动调整开启时生效。",
-			"settings.reviewEffort": "复核档位",
-			"settings.reviewEffortHint": "某一步失败后，直到修复落地前使用；诊断失败与制定方案是同类工作。",
 			"settings.on": "开",
 			"settings.off": "关",
 			"settings.inherit": "继承（跟随部署默认）",
@@ -42620,11 +42725,7 @@ window.__ModuleLoader__.load({
 			"settings.invalidValue": "该取值不被接受",
 			"presentation.ptc": "ptc（仅 run_code）",
 			"presentation.native": "native（原生工具清单）",
-			"presentation.both": "both（两者同驻）",
-			"effort.off": "off（不思考）",
-			"effort.low": "low（轻度）",
-			"effort.high": "high（较深）",
-			"effort.max": "max（最深）"
+			"presentation.both": "both（两者同驻）"
 		};
 		/** English counterpart; the key set mirrors {@link zh} exactly. */
 		const en$7 = {
@@ -42644,21 +42745,13 @@ window.__ModuleLoader__.load({
 			"burst.line1": "Three seconds, three lifetimes of code",
 			"burst.line2": "Classical Chinese · Binary · Morse code",
 			"settings.title": "LiangShen mode",
-			"settings.description": "Controls this plugin, the wire presentation, and the phase-based reasoning levels.",
+			"settings.description": "Controls this plugin and the wire presentation.",
 			"settings.enabled": "Enable LiangShen mode",
 			"settings.enabledHint": "When off, neither preset sync nor the agent announcement runs.",
 			"settings.announceToAgent": "Announce this plugin to agents",
 			"settings.announceToAgentHint": "Adds this plugin announcement to every agent system prompt; off by default so prompts stay clean.",
 			"settings.presentation": "Wire presentation",
 			"settings.presentationHint": "Written into the synced preset: ptc collapses the wire to run_code; native keeps the native roster; both keeps them co-resident. Restart DSH for a change to take effect.",
-			"settings.autoEffortByPhase": "Adjust the reasoning level by phase",
-			"settings.autoEffortByPhaseHint": "Off (default) leaves requests untouched, so the model picker level stands all session; on lets the phase levels below take over.",
-			"settings.planningEffort": "Planning level",
-			"settings.planningEffortHint": "Used while plan mode is forming the work, and on a first turn whose shape is still undecided. Only active when the switch above is on.",
-			"settings.executionEffort": "Execution level",
-			"settings.executionEffortHint": "Used for single-step execution turns (reading files, editing, running commands). Only active when the switch above is on.",
-			"settings.reviewEffort": "Review level",
-			"settings.reviewEffortHint": "Used after a failed step, until a fix lands; diagnosing a failure is the same kind of work as forming a plan.",
 			"settings.on": "On",
 			"settings.off": "Off",
 			"settings.inherit": "Inherit (deployment default)",
@@ -42673,23 +42766,66 @@ window.__ModuleLoader__.load({
 			"settings.discard": "Discard",
 			"settings.unsaved": "Unsaved",
 			"settings.saveFailed": "The deployment did not accept these values; they were left for you to correct.",
-			"settings.invalidValue": "That value is not accepted",
+			"settings.invalidValue": "The value is not accepted",
 			"presentation.ptc": "ptc (run_code only)",
-			"presentation.native": "native (native roster)",
-			"presentation.both": "both (co-resident)",
-			"effort.off": "off (no thinking)",
-			"effort.low": "low (light)",
-			"effort.high": "high (deep)",
-			"effort.max": "max (deepest)"
+			"presentation.native": "native (native tool roster)",
+			"presentation.both": "both (both co-resident)"
 		};
 		//#endregion
 		//#region ../dsh-liangshen/src/client/plugin-card-seat.ts
-		/** Whether the running host declares the official keyed plugin-card seat. */
-		function officialPluginCardSeatDeclared$1(ctx) {
-			const spec = ctx.slots.spec;
-			if (typeof spec !== "function") return false;
+		/**
+		* Family plugin-card seat.
+		*
+		* A family plugin contributes its settings card to whichever plugin-card seat
+		* the running host actually renders:
+		*
+		* - `web-ui.plugin.item` — the list seat declared by the dsh-web-settings
+		*   group section (this family's own first-level "Web UI plugins" section);
+		* - `settings.plugin.item` — the official keyed seat of the harness's
+		*   `ui-settings-plugins` tab, keyed by the settings namespace the card edits.
+		*
+		* SEAT SELECTION IS NOT A DECLARATION PROBE. The official `ui-settings-plugins`
+		* row belongs to the harness bundle and its `configurable` tab always declares
+		* `settings.plugin.item` before any external plugin's `apply()` runs, so
+		* "is the official seat declared?" answers yes even in the deployment whose
+		* whole point is the family group. Choosing on that probe sends every family
+		* card to the official Plugins tab and leaves the group's own section
+		* permanently empty — the family of reports where the section renders its
+		* heading and zero cards.
+		*
+		* The signal that actually distinguishes the two deployments is whether
+		* dsh-web-settings is loaded: it is the package that owns the group section and
+		* it publishes the `webUiSettings` service during `apply()`, which every
+		* family plugin already reads for its settings scope. Group loaded -> the family
+		* seat; group absent -> the official seat.
+		*
+		* The decision is re-evaluated on every `slots/changed` because the group may
+		* apply after this plugin (the family aggregate orders it first, a profile that
+		* installs the group separately need not): the initial contribution goes to the
+		* official seat, then moves to the family seat the moment the group's section
+		* registers. The entry is disposed before the replacement is registered, so a
+		* card is never in two seats at once.
+		*
+		* The shared tree has no client-SDK dependency, so this module reads its
+		* context through the structural shape below; callers pass the plugin's own
+		* `ctx`.
+		*/
+		/** The family list seat key. */
+		const FAMILY_PLUGIN_CARD_SEAT$1 = "web-ui.plugin.item";
+		/** The official keyed plugin-card seat key. */
+		const OFFICIAL_PLUGIN_CARD_SEAT$1 = "settings.plugin.item";
+		/** The service dsh-web-settings publishes while it is loaded. */
+		const FAMILY_GROUP_SERVICE$1 = "webUiSettings";
+		/**
+		* Whether the family group (dsh-web-settings) is loaded in this page. The
+		* service is the group package's own contract, so the probe cannot be fooled
+		* by a harness release that starts declaring the official seat differently.
+		*/
+		function familyGroupLoaded$1(ctx) {
+			const get = ctx.get;
+			if (typeof get !== "function") return false;
 			try {
-				return spec.call(ctx.slots, "settings.plugin.item") !== void 0;
+				return get.call(ctx, FAMILY_GROUP_SERVICE$1) !== void 0;
 			} catch {
 				return false;
 			}
@@ -42701,46 +42837,62 @@ window.__ModuleLoader__.load({
 			} catch {}
 		}
 		/**
-		* Contribute one family plugin card to the seat this host declares.
+		* Contribute one family plugin card to the seat this host renders, following
+		* the group if it loads later. The entry is disposed and re-registered on a
+		* seat change, never duplicated.
 		* @param ctx - client context (its slot registry decides the seat).
 		* @param seat - the card contribution.
 		*/
 		function installPluginCard$1(ctx, seat) {
 			const slots = ctx.slots;
 			const component = seat.component;
-			if (officialPluginCardSeatDeclared$1(ctx)) {
-				const inject = seat.inject;
-				slots.inject("settings.plugin.item", () => {
-					try {
-						return slots.register({
-							name: "settings.plugin.item",
-							key: seat.namespace,
-							locale: seat.locale,
-							...seat.inject === void 0 ? {} : { inject }
-						}, component);
-					} catch (error) {
-						warnRefusedSeat$1("settings.plugin.item", error);
-						return () => {};
-					}
-				});
-				return;
-			}
 			const inject = seat.inject;
-			slots.inject("web-ui.plugin.item", () => {
+			let dispose;
+			let current;
+			/**
+			* Re-entrancy latch. The registry emits a change event synchronously from
+			* inside both `register` and the previous entry's disposer, so an unguarded
+			* reconcile would re-enter itself mid-move and register the card twice into
+			* the seat it is leaving ("already has an entry for key ...").
+			*/
+			let reconciling = false;
+			/** Reconcile the contribution with the currently live seat (no-op when unchanged). */
+			const reconcile = () => {
+				if (reconciling) return;
+				const target = familyGroupLoaded$1(ctx) ? FAMILY_PLUGIN_CARD_SEAT$1 : OFFICIAL_PLUGIN_CARD_SEAT$1;
+				if (current === target) return;
+				reconciling = true;
+				const previous = dispose;
+				dispose = void 0;
+				current = void 0;
+				previous?.();
 				try {
-					return slots.register({
-						name: "web-ui.plugin.item",
+					dispose = slots.register(target === "web-ui.plugin.item" ? {
+						name: FAMILY_PLUGIN_CARD_SEAT$1,
 						id: seat.id,
 						...seat.order === void 0 ? {} : { order: seat.order },
 						...seat.label === void 0 ? {} : { label: seat.label },
 						locale: seat.locale,
 						...seat.inject === void 0 ? {} : { inject }
+					} : {
+						name: OFFICIAL_PLUGIN_CARD_SEAT$1,
+						key: seat.namespace,
+						locale: seat.locale,
+						...seat.inject === void 0 ? {} : { inject }
 					}, component);
+					current = target;
 				} catch (error) {
-					warnRefusedSeat$1("web-ui.plugin.item", error);
-					return () => {};
+					warnRefusedSeat$1(target, error);
+				} finally {
+					reconciling = false;
 				}
-			});
+			};
+			if (typeof ctx.on === "function") try {
+				ctx.on("slots/changed", () => {
+					reconcile();
+				});
+			} catch {}
+			reconcile();
 		}
 		//#endregion
 		//#region ../dsh-liangshen/src/client/index.ts
@@ -47446,12 +47598,59 @@ window.__ModuleLoader__.load({
 		}
 		//#endregion
 		//#region ../dsh-doctor/src/client/plugin-card-seat.ts
-		/** Whether the running host declares the official keyed plugin-card seat. */
-		function officialPluginCardSeatDeclared(ctx) {
-			const spec = ctx.slots.spec;
-			if (typeof spec !== "function") return false;
+		/**
+		* Family plugin-card seat.
+		*
+		* A family plugin contributes its settings card to whichever plugin-card seat
+		* the running host actually renders:
+		*
+		* - `web-ui.plugin.item` — the list seat declared by the dsh-web-settings
+		*   group section (this family's own first-level "Web UI plugins" section);
+		* - `settings.plugin.item` — the official keyed seat of the harness's
+		*   `ui-settings-plugins` tab, keyed by the settings namespace the card edits.
+		*
+		* SEAT SELECTION IS NOT A DECLARATION PROBE. The official `ui-settings-plugins`
+		* row belongs to the harness bundle and its `configurable` tab always declares
+		* `settings.plugin.item` before any external plugin's `apply()` runs, so
+		* "is the official seat declared?" answers yes even in the deployment whose
+		* whole point is the family group. Choosing on that probe sends every family
+		* card to the official Plugins tab and leaves the group's own section
+		* permanently empty — the family of reports where the section renders its
+		* heading and zero cards.
+		*
+		* The signal that actually distinguishes the two deployments is whether
+		* dsh-web-settings is loaded: it is the package that owns the group section and
+		* it publishes the `webUiSettings` service during `apply()`, which every
+		* family plugin already reads for its settings scope. Group loaded -> the family
+		* seat; group absent -> the official seat.
+		*
+		* The decision is re-evaluated on every `slots/changed` because the group may
+		* apply after this plugin (the family aggregate orders it first, a profile that
+		* installs the group separately need not): the initial contribution goes to the
+		* official seat, then moves to the family seat the moment the group's section
+		* registers. The entry is disposed before the replacement is registered, so a
+		* card is never in two seats at once.
+		*
+		* The shared tree has no client-SDK dependency, so this module reads its
+		* context through the structural shape below; callers pass the plugin's own
+		* `ctx`.
+		*/
+		/** The family list seat key. */
+		const FAMILY_PLUGIN_CARD_SEAT = "web-ui.plugin.item";
+		/** The official keyed plugin-card seat key. */
+		const OFFICIAL_PLUGIN_CARD_SEAT = "settings.plugin.item";
+		/** The service dsh-web-settings publishes while it is loaded. */
+		const FAMILY_GROUP_SERVICE = "webUiSettings";
+		/**
+		* Whether the family group (dsh-web-settings) is loaded in this page. The
+		* service is the group package's own contract, so the probe cannot be fooled
+		* by a harness release that starts declaring the official seat differently.
+		*/
+		function familyGroupLoaded(ctx) {
+			const get = ctx.get;
+			if (typeof get !== "function") return false;
 			try {
-				return spec.call(ctx.slots, "settings.plugin.item") !== void 0;
+				return get.call(ctx, FAMILY_GROUP_SERVICE) !== void 0;
 			} catch {
 				return false;
 			}
@@ -47463,46 +47662,62 @@ window.__ModuleLoader__.load({
 			} catch {}
 		}
 		/**
-		* Contribute one family plugin card to the seat this host declares.
+		* Contribute one family plugin card to the seat this host renders, following
+		* the group if it loads later. The entry is disposed and re-registered on a
+		* seat change, never duplicated.
 		* @param ctx - client context (its slot registry decides the seat).
 		* @param seat - the card contribution.
 		*/
 		function installPluginCard(ctx, seat) {
 			const slots = ctx.slots;
 			const component = seat.component;
-			if (officialPluginCardSeatDeclared(ctx)) {
-				const inject = seat.inject;
-				slots.inject("settings.plugin.item", () => {
-					try {
-						return slots.register({
-							name: "settings.plugin.item",
-							key: seat.namespace,
-							locale: seat.locale,
-							...seat.inject === void 0 ? {} : { inject }
-						}, component);
-					} catch (error) {
-						warnRefusedSeat("settings.plugin.item", error);
-						return () => {};
-					}
-				});
-				return;
-			}
 			const inject = seat.inject;
-			slots.inject("web-ui.plugin.item", () => {
+			let dispose;
+			let current;
+			/**
+			* Re-entrancy latch. The registry emits a change event synchronously from
+			* inside both `register` and the previous entry's disposer, so an unguarded
+			* reconcile would re-enter itself mid-move and register the card twice into
+			* the seat it is leaving ("already has an entry for key ...").
+			*/
+			let reconciling = false;
+			/** Reconcile the contribution with the currently live seat (no-op when unchanged). */
+			const reconcile = () => {
+				if (reconciling) return;
+				const target = familyGroupLoaded(ctx) ? FAMILY_PLUGIN_CARD_SEAT : OFFICIAL_PLUGIN_CARD_SEAT;
+				if (current === target) return;
+				reconciling = true;
+				const previous = dispose;
+				dispose = void 0;
+				current = void 0;
+				previous?.();
 				try {
-					return slots.register({
-						name: "web-ui.plugin.item",
+					dispose = slots.register(target === "web-ui.plugin.item" ? {
+						name: FAMILY_PLUGIN_CARD_SEAT,
 						id: seat.id,
 						...seat.order === void 0 ? {} : { order: seat.order },
 						...seat.label === void 0 ? {} : { label: seat.label },
 						locale: seat.locale,
 						...seat.inject === void 0 ? {} : { inject }
+					} : {
+						name: OFFICIAL_PLUGIN_CARD_SEAT,
+						key: seat.namespace,
+						locale: seat.locale,
+						...seat.inject === void 0 ? {} : { inject }
 					}, component);
+					current = target;
 				} catch (error) {
-					warnRefusedSeat("web-ui.plugin.item", error);
-					return () => {};
+					warnRefusedSeat(target, error);
+				} finally {
+					reconciling = false;
 				}
-			});
+			};
+			if (typeof ctx.on === "function") try {
+				ctx.on("slots/changed", () => {
+					reconcile();
+				});
+			} catch {}
+			reconcile();
 		}
 		//#endregion
 		//#region ../dsh-doctor/src/client/index.ts
