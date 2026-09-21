@@ -598,7 +598,7 @@ window.__ModuleLoader__.load({
 		/** The building package's version, when the bundle carries it. */
 		function bakedVersion$11() {
 			try {
-				return "0.3.23";
+				return "0.3.24";
 			} catch {
 				return;
 			}
@@ -2049,7 +2049,7 @@ window.__ModuleLoader__.load({
 		/** The building package's version, when the bundle carries it. */
 		function bakedVersion$10() {
 			try {
-				return "0.3.23";
+				return "0.3.24";
 			} catch {
 				return;
 			}
@@ -4580,7 +4580,7 @@ window.__ModuleLoader__.load({
 		/** The building package's version, when the bundle carries it. */
 		function bakedVersion$9() {
 			try {
-				return "0.3.23";
+				return "0.3.24";
 			} catch {
 				return;
 			}
@@ -6324,6 +6324,7 @@ window.__ModuleLoader__.load({
 			"new.prompt": "执行 Prompt",
 			"new.promptPlaceholder": "发给 agent 的完整指令（留空则使用标题）",
 			"new.submit": "创建",
+			"new.createAndRun": "创建并执行",
 			"new.cancel": "取消",
 			"new.required": "标题不能为空",
 			"new.freeze": "冻结快照（可选）",
@@ -6512,6 +6513,7 @@ window.__ModuleLoader__.load({
 			"new.prompt": "Run Prompt",
 			"new.promptPlaceholder": "The full instruction sent to the agent (title is used when blank)",
 			"new.submit": "Create",
+			"new.createAndRun": "Create and run",
 			"new.cancel": "Cancel",
 			"new.required": "Title is required",
 			"new.freeze": "Frozen snapshot (optional)",
@@ -6784,7 +6786,7 @@ window.__ModuleLoader__.load({
 		/** DOM id shared by the tag-name inputs and their datalist (one board at a time). */
 		const TAG_NAME_LIST_ID = "dsh-task-board-tag-names";
 		/** Modal overlay: closes on backdrop press, submits through the form. */
-		function ModalShell({ ariaLabel, title, error, pending, submitLabel, onSubmit, onClose, children }) {
+		function ModalShell({ ariaLabel, title, error, pending, submitLabel, onSubmit, onClose, secondaryAction, children }) {
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
 				className: board_module_css_default.modalBackdrop,
 				onMouseDown: (event) => {
@@ -6810,17 +6812,27 @@ window.__ModuleLoader__.load({
 						}),
 						/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("footer", {
 							className: board_module_css_default.modalFooter,
-							children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
-								type: "button",
-								className: board_module_css_default.ghostButton,
-								onClick: onClose,
-								children: t$6("new.cancel")
-							}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
-								type: "submit",
-								className: board_module_css_default.primaryButton,
-								disabled: pending,
-								children: submitLabel
-							})]
+							children: [
+								/* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
+									type: "button",
+									className: board_module_css_default.ghostButton,
+									onClick: onClose,
+									children: t$6("new.cancel")
+								}),
+								secondaryAction !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
+									type: "button",
+									className: board_module_css_default.ghostButton,
+									disabled: pending,
+									onClick: secondaryAction.onSubmit,
+									children: secondaryAction.label
+								}),
+								/* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
+									type: "submit",
+									className: board_module_css_default.primaryButton,
+									disabled: pending,
+									children: submitLabel
+								})
+							]
 						})
 					]
 				})
@@ -6959,6 +6971,37 @@ window.__ModuleLoader__.load({
 			return normalizeTags(tags) ?? [];
 		}
 		//#endregion
+		//#region ../dsh-task-board/src/client/board/parse-model-pref.ts
+		/**
+		* The model the user last picked for AI parsing, remembered per browser so the
+		* next new-task modal starts from it instead of the roster's first entry
+		* (issue #1621). An empty value is a real choice — "let the Host use its
+		* default model" — and is remembered as such.
+		*/
+		const PARSE_MODEL_KEY = "dsh-task-board.parse-model";
+		/** The nearest browser storage, or undefined when the global itself throws. */
+		function defaultStorage() {
+			try {
+				return globalThis.localStorage;
+			} catch {
+				return;
+			}
+		}
+		/** The remembered parse model; '' means the Host default (or no preference). */
+		function readParseModelPreference(storage = defaultStorage()) {
+			try {
+				return storage?.getItem(PARSE_MODEL_KEY) ?? "";
+			} catch {
+				return "";
+			}
+		}
+		/** Remember the picked parse model; '' records the Host-default choice. */
+		function writeParseModelPreference(model, storage = defaultStorage()) {
+			try {
+				storage?.setItem(PARSE_MODEL_KEY, model);
+			} catch {}
+		}
+		//#endregion
 		//#region ../dsh-task-board/src/client/board/NewTaskModal.tsx
 		/**
 		* New-task modal: title + description + the prompt that execution will send.
@@ -6988,14 +7031,17 @@ window.__ModuleLoader__.load({
 			const [options, setOptions] = (0, react.useState)(controller.getSnapshot().executionOptions);
 			const [canParse] = (0, react.useState)(controller.getSnapshot().canParseTask === true);
 			const [parseText, setParseText] = (0, react.useState)("");
-			const [parseModel, setParseModel] = (0, react.useState)("");
+			const [parseModel, setParseModel] = (0, react.useState)(() => readParseModelPreference());
 			const [parsePending, setParsePending] = (0, react.useState)(false);
 			const [parseError, setParseError] = (0, react.useState)(void 0);
 			const parseAbort = (0, react.useRef)(void 0);
 			const parseModels = options.models ?? [];
 			(0, react.useEffect)(() => controller.subscribe(() => setOptions(controller.getSnapshot().executionOptions)), [controller]);
 			(0, react.useEffect)(() => {
-				if (parseModel === "" && parseModels.length > 0) setParseModel(parseModels[0].id);
+				if (parseModel === "" || parseModels.length === 0) return;
+				if (parseModels.some((option) => option.id === parseModel)) return;
+				setParseModel("");
+				writeParseModelPreference("");
 			}, [parseModel, options.models]);
 			const runParse = async () => {
 				const text = parseText.trim();
@@ -7022,7 +7068,13 @@ window.__ModuleLoader__.load({
 					setParsePending(false);
 				}
 			};
-			const submit = async () => {
+			/**
+			* Create the task through the Host, then optionally start it.
+			* @param runAfterCreate - true for the "create and run" action: the task is
+			* committed either way, and a refused start opens the task instead of
+			* reporting the creation as failed.
+			*/
+			const submit = async (runAfterCreate) => {
 				if (scheduleEnabled) {
 					const cron = scheduleCron.trim();
 					if (cron === "" || !isValidCron(cron)) {
@@ -7051,7 +7103,7 @@ window.__ModuleLoader__.load({
 				};
 				const tagList = cleanTags(tags);
 				setPending(true);
-				if (await controller.createTaskConfirmed({
+				const task = await controller.createTaskConfirmed({
 					title,
 					description,
 					prompt,
@@ -7067,13 +7119,17 @@ window.__ModuleLoader__.load({
 						enabled: true,
 						cron: scheduleCron.trim()
 					} : void 0
-				}) === void 0) {
+				});
+				if (task === void 0) {
 					setPending(false);
 					setError(controller.getSnapshot().transportError ?? t$6("new.required"));
 					return;
 				}
 				if (isDuplicate && archiveOriginal && initialTask !== void 0) if (onDuplicateSuccess !== void 0) await onDuplicateSuccess(initialTask.id);
 				else await controller.archiveTask(initialTask.id);
+				if (runAfterCreate) {
+					if (!await controller.runTask(task.id)) controller.openTask(task.id);
+				}
 				onClose();
 			};
 			/** Next-run preview for a valid armed cron (creation-time only). */
@@ -7086,9 +7142,15 @@ window.__ModuleLoader__.load({
 				pending,
 				submitLabel: t$6("new.submit"),
 				onSubmit: () => {
-					submit();
+					submit(false);
 				},
 				onClose,
+				secondaryAction: {
+					label: t$6("new.createAndRun"),
+					onSubmit: () => {
+						submit(true);
+					}
+				},
 				children: [
 					canParse && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("section", {
 						className: board_module_css_default.aiParse,
@@ -7115,17 +7177,21 @@ window.__ModuleLoader__.load({
 							}),
 							/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 								className: board_module_css_default.aiParseRow,
-								children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("select", {
+								children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("select", {
 									className: board_module_css_default.select,
 									value: parseModel,
 									"aria-label": t$6("new.aiParseModel"),
 									onChange: (event) => {
 										setParseModel(event.target.value);
+										writeParseModelPreference(event.target.value);
 									},
-									children: parseModels.map((option) => /* @__PURE__ */ (0, react_jsx_runtime.jsx)("option", {
+									children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("option", {
+										value: "",
+										children: t$6("exec.model.default")
+									}), parseModels.map((option) => /* @__PURE__ */ (0, react_jsx_runtime.jsx)("option", {
 										value: option.id,
 										children: option.name ?? option.id
-									}, option.id))
+									}, option.id))]
 								}), parsePending ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
 									type: "button",
 									className: board_module_css_default.ghostButton,
@@ -8955,10 +9021,12 @@ window.__ModuleLoader__.load({
 			if (nested !== null) return nested;
 			for (const child of root.children) if (child.tagName === "BUTTON") return child;
 		}
-		/** Build the entry row (a detached button; insert once the shell is up). */
+		/** Build the entry row (detached; inserted once the shell is up). */
 		function createEntry$3(options) {
-			const entry = document.createElement("button");
-			entry.type = "button";
+			const actions = options.actions ?? [];
+			const composite = actions.length > 0;
+			const entry = document.createElement(composite ? "div" : "button");
+			if (!composite) entry.type = "button";
 			entry.setAttribute(options.rowAttribute, "");
 			if (options.plugin !== void 0) {
 				entry.setAttribute("data-dsh-plugin", options.plugin);
@@ -8970,17 +9038,57 @@ window.__ModuleLoader__.load({
 			const iconSpan = document.createElement("span");
 			iconSpan.className = options.css["entryIcon"] ?? "";
 			iconSpan.innerHTML = options.icon;
-			entry.append(iconSpan, labelSpan);
+			const main = composite ? document.createElement("button") : entry;
+			if (composite) {
+				main.type = "button";
+				main.className = options.css["entryMain"] ?? "";
+				main.append(iconSpan, labelSpan);
+				entry.append(main);
+			} else entry.append(iconSpan, labelSpan);
+			const actionButtons = [];
+			for (const action of actions) {
+				const button = document.createElement("button");
+				button.type = "button";
+				button.className = options.css["entryAction"] ?? "";
+				button.setAttribute("data-dsh-entry-action", action.id);
+				button.innerHTML = action.icon;
+				button.addEventListener("click", () => {
+					action.onClick(button);
+				});
+				entry.append(button);
+				actionButtons.push({
+					action,
+					button
+				});
+			}
+			let open = false;
+			const applyActions = () => {
+				for (const { action, button } of actionButtons) {
+					button.innerHTML = open || action.inactiveIcon === void 0 ? action.icon : action.inactiveIcon;
+					const text = action.label(open);
+					button.setAttribute("aria-label", text);
+					button.setAttribute("title", text);
+					if (action.inactiveIcon !== void 0) button.setAttribute("aria-expanded", String(open));
+				}
+			};
 			const applyLabel = () => {
-				entry.setAttribute("aria-label", options.label());
-				if (options.tooltip !== void 0) entry.setAttribute("title", options.tooltip());
+				main.setAttribute("aria-label", options.label());
+				if (options.tooltip !== void 0) main.setAttribute("title", options.tooltip());
 				labelSpan.textContent = options.label();
+				applyActions();
 			};
 			applyLabel();
-			entry.addEventListener("click", options.onToggle);
+			main.addEventListener("click", options.onToggle);
+			if (composite) entry.addEventListener("click", (event) => {
+				if (event.target === entry) options.onToggle();
+			});
 			return {
 				entry,
-				applyLabel
+				applyLabel,
+				setOpen: (next) => {
+					open = next;
+					applyActions();
+				}
 			};
 		}
 		/** Re-insert the entry after the New Session row (before the browser region). */
@@ -9004,7 +9112,7 @@ window.__ModuleLoader__.load({
 		*/
 		function mountSidebarEntry$7(options) {
 			if (typeof document !== "undefined" && document.querySelector(options.rowSelector) !== null) return () => {};
-			const { entry, applyLabel } = createEntry$3(options);
+			const { entry, applyLabel, setOpen } = createEntry$3(options);
 			let root;
 			let placed = false;
 			let unsubscribeRefresh;
@@ -9044,8 +9152,10 @@ window.__ModuleLoader__.load({
 			});
 			const unsubscribeActive = options.active === void 0 ? void 0 : (() => {
 				const syncActive = () => {
-					if (options.active.isOpen()) entry.dataset.active = "true";
+					const open = options.active.isOpen();
+					if (open) entry.dataset.active = "true";
 					else delete entry.dataset.active;
+					setOpen(open);
 				};
 				const unsubscribe = options.active.subscribe(syncActive);
 				syncActive();
@@ -10109,7 +10219,7 @@ window.__ModuleLoader__.load({
 		/** The building package's version, when the bundle carries it. */
 		function bakedVersion$8() {
 			try {
-				return "0.3.23";
+				return "0.3.24";
 			} catch {
 				return;
 			}
@@ -12138,7 +12248,7 @@ window.__ModuleLoader__.load({
 		/** The building package's version, when the bundle carries it. */
 		function bakedVersion$7() {
 			try {
-				return "0.3.23";
+				return "0.3.24";
 			} catch {
 				return;
 			}
@@ -16870,7 +16980,7 @@ window.__ModuleLoader__.load({
 		/** The building package's version, when the bundle carries it. */
 		function bakedVersion$6() {
 			try {
-				return "0.3.23";
+				return "0.3.24";
 			} catch {
 				return;
 			}
@@ -16954,6 +17064,12 @@ window.__ModuleLoader__.load({
 		const COMPACT_CLASS = "dsh-remote-compact-picker";
 		/** Body class while the header actions are seated in the tabs row. */
 		const HEADER_SEATED_CLASS = "dsh-remote-header-seated";
+		/**
+		* Width the seated header actions paint over the tabs row, as a CSS variable
+		* on <html>. The row caps its own width with it (see the v80 rules) instead of
+		* reserving the space with padding.
+		*/
+		const HEADER_RESERVE_VAR = "--dsh-remote-header-actions-reserve";
 		/** Locale-dependent fast path for the official picker cells (zh/en). */
 		const PICKER_CELL_PATTERN = {
 			model: /模型|Model/,
@@ -17052,6 +17168,9 @@ window.__ModuleLoader__.load({
 			"[class$=\"_composerSeat\"] [class$=\"_frame\"] [class$=\"_card\"]{max-width:none;width:100%}",
 			`body.${HEADER_SEATED_CLASS} [class$="_header"] [class$="_titleCluster"] [class$="_headerActions"]{position:absolute;left:0;top:0;margin:0;display:flex;align-items:center;gap:6px;flex:none;z-index:2}`,
 			"[class$=\"_header\"] [class$=\"_tabs\"] [class*=\"_tab\"]{font-size:12px;white-space:nowrap}",
+			`body.${HEADER_SEATED_CLASS} [class$="_header"] [class$="_tabs"]{max-width:max(0px,calc(100% - var(${HEADER_RESERVE_VAR},0px)));overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px;margin-bottom:-2px}`,
+			`body.${HEADER_SEATED_CLASS} [class$="_header"] [class$="_tabs"]::-webkit-scrollbar{display:none}`,
+			`body.${HEADER_SEATED_CLASS} [class$="_header"] [class$="_tabs"] > [class*="_tab"]{flex:0 0 auto}`,
 			`body.${ACTIVE_CLASS} [class$=\"_detailsCol\"]{display:none !important}`,
 			`body.${ACTIVE_CLASS} [data-dsh-plugin=\"ssh\"],`,
 			`body.${ACTIVE_CLASS} [data-dsh-plugin=\"skill-explorer\"],`,
@@ -17470,7 +17589,9 @@ window.__ModuleLoader__.load({
 				let dx = translate !== null ? parseFloat(translate[1] ?? "0") : 0;
 				let dy = translate !== null ? parseFloat(translate[2] ?? "0") : 0;
 				const actionsRect = actions.getBoundingClientRect();
-				const rightDiff = tabs.getBoundingClientRect().right - actionsRect.right;
+				const headerRect = header.getBoundingClientRect();
+				const headerStyle = getComputedStyle(header);
+				const rightDiff = headerRect.right - (parseFloat(headerStyle.paddingRight) || 0) - (parseFloat(headerStyle.borderRightWidth) || 0) - actionsRect.right;
 				if (Math.abs(rightDiff) >= .5) dx = Math.round((dx + rightDiff) * 10) / 10;
 				const tabBottom = textBottom(tabBtn);
 				if (tabBottom !== null) {
@@ -17487,10 +17608,12 @@ window.__ModuleLoader__.load({
 				const next = `translate(${dx}px, ${dy}px)`;
 				if (actions.style.transform !== next) actions.style.transform = next;
 				const reserve = `${Math.ceil(actionsRect.width) + 8}px`;
-				if (tabs.style.paddingRight !== reserve) tabs.style.paddingRight = reserve;
+				const rootStyle = document.documentElement.style;
+				if (rootStyle.getPropertyValue(HEADER_RESERVE_VAR) !== reserve) rootStyle.setProperty(HEADER_RESERVE_VAR, reserve);
 			}
 			function unseatHeaderActions() {
 				document.body.classList.remove(HEADER_SEATED_CLASS);
+				document.documentElement.style.removeProperty(HEADER_RESERVE_VAR);
 				const header = document.querySelector("[class$=\"_header\"]");
 				const tabs = header !== null ? header.querySelector("[class$=\"_tabs\"]") : null;
 				const actions = header !== null ? header.querySelector("[class$=\"_titleCluster\"] [class$=\"_headerActions\"]") : null;
@@ -18772,6 +18895,7 @@ window.__ModuleLoader__.load({
 			(0, react.useEffect)(() => () => clearHideTimer(), []);
 			const onPointerDown = (e) => {
 				if (props.dragDisabled === true) return;
+				endWalk(false);
 				e.preventDefault();
 				e.target.setPointerCapture?.(e.pointerId);
 				const current = dragPos ?? {
@@ -18814,6 +18938,84 @@ window.__ModuleLoader__.load({
 			};
 			const spriteWidth = Math.round(cell.width * spriteScale);
 			const spriteHeight = Math.round(cell.height * spriteScale);
+			const [facingRight, setFacingRight] = (0, react.useState)(false);
+			const walkRafRef = (0, react.useRef)(0);
+			const walkTargetRef = (0, react.useRef)(null);
+			const dragPosRef = (0, react.useRef)(dragPos);
+			dragPosRef.current = dragPos;
+			/** Stop an active walk; `persist` lands the pet on the spot it reached. */
+			const endWalk = (persist) => {
+				if (walkRafRef.current === 0) return;
+				window.cancelAnimationFrame(walkRafRef.current);
+				walkRafRef.current = 0;
+				setFacingRight(false);
+				const settled = walkTargetRef.current;
+				walkTargetRef.current = null;
+				if (persist && settled !== null) props.onDragEnd(settled.right, settled.bottom);
+			};
+			(0, react.useEffect)(() => {
+				const bus = props.bus;
+				if (bus === void 0) return void 0;
+				bus.walk = (direction, distance, speed) => {
+					if (dragRef.current !== null || walkRafRef.current !== 0) return 0;
+					const current = dragPosRef.current ?? {
+						right: display.right,
+						bottom: display.bottom
+					};
+					const margin = 8;
+					const maxRight = Math.max(margin, window.innerWidth - spriteWidth - margin);
+					const maxBottom = Math.max(margin, window.innerHeight - spriteHeight - margin);
+					const wanted = { ...current };
+					if (direction === "left") wanted.right = current.right + distance;
+					else if (direction === "right") wanted.right = current.right - distance;
+					else if (direction === "up") wanted.bottom = current.bottom + distance;
+					else wanted.bottom = current.bottom - distance;
+					const target = {
+						right: Math.max(margin, clampOffset(wanted.right, maxRight)),
+						bottom: Math.max(margin, clampOffset(wanted.bottom, maxBottom))
+					};
+					const travelled = direction === "left" ? target.right - current.right : direction === "right" ? current.right - target.right : direction === "up" ? target.bottom - current.bottom : current.bottom - target.bottom;
+					if (travelled < 1) return 0;
+					const duration = Math.max(150, travelled / Math.max(1, speed) * 1e3);
+					const startedAt = performance.now();
+					setFacingRight(direction === "right");
+					walkTargetRef.current = current;
+					const step = (now) => {
+						const t = Math.min(1, (now - startedAt) / duration);
+						const next = {
+							right: current.right + (target.right - current.right) * t,
+							bottom: current.bottom + (target.bottom - current.bottom) * t
+						};
+						walkTargetRef.current = next;
+						setDragPos(next);
+						if (t < 1) {
+							walkRafRef.current = window.requestAnimationFrame(step);
+							return;
+						}
+						walkRafRef.current = 0;
+						walkTargetRef.current = null;
+						setFacingRight(false);
+						props.onDragEnd(next.right, next.bottom);
+					};
+					walkRafRef.current = window.requestAnimationFrame(step);
+					return travelled;
+				};
+				return () => {
+					bus.walk = void 0;
+					if (walkRafRef.current !== 0) {
+						window.cancelAnimationFrame(walkRafRef.current);
+						walkRafRef.current = 0;
+					}
+					setFacingRight(false);
+					walkTargetRef.current = null;
+				};
+			}, [
+				props.bus,
+				definition.id,
+				display.right,
+				display.bottom,
+				spriteWidth
+			]);
 			const bubbleScale = bubbleScaleFor(display);
 			const sessionBubbles = snapshot?.sessions ?? [];
 			const stackOpen = stackPeek || stackPinned;
@@ -18895,7 +19097,8 @@ window.__ModuleLoader__.load({
 									backgroundRepeat: "no-repeat",
 									backgroundPosition: "0 0"
 								} : {},
-								cursor: dragRef.current === null ? "grab" : "grabbing"
+								cursor: dragRef.current === null ? "grab" : "grabbing",
+								...facingRight ? { transform: "scaleX(-1)" } : {}
 							},
 							onPointerDown,
 							onPointerMove,
@@ -19388,6 +19591,36 @@ window.__ModuleLoader__.load({
 		}
 		//#endregion
 		//#region ../dsh-pet/src/gameplay.ts
+		/** Every roam direction, in roll order (equal chance each unless restricted). */
+		const PET_ROAM_DIRECTIONS = [
+			"up",
+			"down",
+			"left",
+			"right"
+		];
+		/**
+		* One declared extra mode, by OWN key only. A plain `modes[id]` lookup also
+		* answers for Object.prototype members ('constructor', 'toString', …), which
+		* would let a crafted mode id pass the "is it declared?" test.
+		*/
+		function declaredModeOf(manifest, mode) {
+			const modes = manifest.modes;
+			if (modes === void 0 || !Object.prototype.hasOwnProperty.call(modes, mode)) return void 0;
+			return modes[mode];
+		}
+		/** Every mode the menu offers, in manifest order (sleep first, then extras). */
+		function declaredModes(manifest) {
+			return [...manifest.sleep === void 0 ? [] : ["sleep"], ...Object.keys(manifest.modes ?? {})];
+		}
+		/**
+		* The frames2d track one active mode holds. 'work' is owned by the work loop
+		* (its state, result and fallback are its own), so it resolves to undefined.
+		*/
+		function modeStateOf(manifest, mode) {
+			if (mode === "sleep") return manifest.sleep?.state;
+			if (mode === "work") return manifest.work?.state;
+			return declaredModeOf(manifest, mode)?.state;
+		}
 		/** The zone one normalized hit-box point lands in, if any. */
 		function touchZoneAt(touch, yFraction) {
 			return touch.zones.find((zone) => yFraction >= zone.y0 && yFraction < zone.y1);
@@ -19411,7 +19644,6 @@ window.__ModuleLoader__.load({
 			const ui = (0, react.useSyncExternalStore)(store.subscribe, store.getSnapshot);
 			const def = definition.gameplay;
 			const view = ui.snapshot?.gameplay;
-			const phase = ui.snapshot?.phase ?? "idle";
 			const persistedSkin = ui.snapshot?.skin;
 			const [open, setOpen] = (0, react.useState)(false);
 			const [page, setPage] = (0, react.useState)("root");
@@ -19423,12 +19655,19 @@ window.__ModuleLoader__.load({
 			const [floats, setFloats] = (0, react.useState)([]);
 			const modeRef = (0, react.useRef)(view?.mode ?? null);
 			modeRef.current = view?.mode ?? null;
-			const phaseRef = (0, react.useRef)(phase);
-			phaseRef.current = phase;
+			/** Live gameplay view for the interval loops (def identity is stable, view is not). */
+			const viewRef = (0, react.useRef)(view);
+			viewRef.current = view;
 			const draggingRef = (0, react.useRef)(false);
 			const touchLockUntilRef = (0, react.useRef)(0);
 			const missRef = (0, react.useRef)(0);
 			const busyRef = (0, react.useRef)(false);
+			/** A roam walk owns the visual right now (the idle director must not steal it). */
+			const roamHeldRef = (0, react.useRef)(false);
+			/** A one-shot idle-director act owns the visual right now (the roam must not cut in). */
+			const actHeldRef = (0, react.useRef)(false);
+			/** Pending release of the roam's walk track (cleared when another owner takes it). */
+			const roamTimerRef = (0, react.useRef)(0);
 			const tr = props.t;
 			const statLabel = (name) => tr("pet.gameplay.stat." + name);
 			const currencyLabel = (name) => tr("pet.gameplay.currency." + name);
@@ -19445,9 +19684,23 @@ window.__ModuleLoader__.load({
 			const applyResult = (result) => {
 				if (result.view !== void 0) store.actions.setGameplayView(result.view);
 			};
+			/**
+			* Give up the roam's claim on the shared track-override slot. Every other
+			* owner (a mode, a touch reaction, a drag) calls this before it takes the
+			* slot, so a walk that is still in flight can never release someone else's
+			* track when its own hold window elapses.
+			*/
+			const yieldRoam = () => {
+				if (roamTimerRef.current !== 0) {
+					window.clearTimeout(roamTimerRef.current);
+					roamTimerRef.current = 0;
+				}
+				roamHeldRef.current = false;
+			};
 			(0, react.useEffect)(() => {
 				if (def === void 0) return void 0;
 				const holdTrack = (track, holdMs) => {
+					yieldRoam();
 					bus.setTrack?.(track);
 					touchLockUntilRef.current = Date.now() + holdMs;
 					window.setTimeout(() => {
@@ -19466,7 +19719,7 @@ window.__ModuleLoader__.load({
 				};
 				const trackDuration = (track) => definition.frames2d?.tracks[track]?.durations.reduce((sum, ms) => sum + ms, 0) ?? 0;
 				bus.tap = (fx, fy) => {
-					if (modeRef.current === "sleep") {
+					if (modeRef.current !== null && modeRef.current !== "work") {
 						api.setMode(null).then(applyResult, () => void 0);
 						return;
 					}
@@ -19552,7 +19805,8 @@ window.__ModuleLoader__.load({
 			(0, react.useEffect)(() => {
 				return props.drag.subscribe((dragging) => {
 					draggingRef.current = dragging;
-					if (dragging && modeRef.current === "sleep") api.setMode(null).then(applyResult, () => void 0);
+					if (dragging) yieldRoam();
+					if (dragging && modeRef.current !== null && modeRef.current !== "work") api.setMode(null).then(applyResult, () => void 0);
 				});
 			}, [props.drag]);
 			(0, react.useEffect)(() => {
@@ -19560,10 +19814,12 @@ window.__ModuleLoader__.load({
 				if (def === void 0 || director === void 0) return void 0;
 				const total = director.idleWeight + director.acts.reduce((sum, act) => sum + act.weight, 0);
 				if (total <= 0) return void 0;
+				let actTimer = 0;
 				const timer = window.setInterval(() => {
-					if (phaseRef.current !== "idle") return;
 					if (modeRef.current !== null || draggingRef.current) return;
 					if (Date.now() < touchLockUntilRef.current) return;
+					if (roamHeldRef.current) return;
+					if (actHeldRef.current) return;
 					let pickedAct;
 					if (missRef.current >= director.maxMiss) {
 						const actTotal = director.acts.reduce((sum, act) => sum + act.weight, 0);
@@ -19590,7 +19846,13 @@ window.__ModuleLoader__.load({
 						return;
 					}
 					missRef.current = 0;
+					actHeldRef.current = true;
 					bus.setTrack?.(pickedAct.track);
+					const holdMs = definition.frames2d?.tracks[pickedAct.track]?.durations.reduce((sum, ms) => sum + ms, 0) ?? 0;
+					window.clearTimeout(actTimer);
+					actTimer = window.setTimeout(() => {
+						actHeldRef.current = false;
+					}, holdMs > 0 ? holdMs : 3e3);
 					if (pickedAct.phrases !== void 0 && pickedAct.phrases.length > 0) {
 						const phrase = pickedAct.phrases[Math.floor(Math.random() * pickedAct.phrases.length)];
 						store.actions.setFeedback({
@@ -19600,7 +19862,11 @@ window.__ModuleLoader__.load({
 						});
 					}
 				}, director.intervalMs);
-				return () => window.clearInterval(timer);
+				return () => {
+					window.clearInterval(timer);
+					window.clearTimeout(actTimer);
+					actHeldRef.current = false;
+				};
 			}, [definition.id, def]);
 			(0, react.useEffect)(() => {
 				const work = def?.work;
@@ -19640,10 +19906,13 @@ window.__ModuleLoader__.load({
 				skinId
 			]);
 			(0, react.useEffect)(() => {
-				const sleep = def?.sleep;
-				if (def === void 0 || sleep === void 0 || view?.mode !== "sleep") return void 0;
-				const hold = (definition.frames2d?.skins?.find((skin) => skin.id === skinIdRef.current)?.gameplayTracks)?.["sleep"] ?? sleep.state;
-				bus.setTrack?.(hold);
+				const active = view?.mode;
+				if (def === void 0 || active === void 0 || active === null || active === "work") return void 0;
+				const hold = modeStateOf(def, active);
+				if (hold === void 0) return void 0;
+				const skinGameplay = definition.frames2d?.skins?.find((skin) => skin.id === skinIdRef.current)?.gameplayTracks;
+				yieldRoam();
+				bus.setTrack?.(skinGameplay?.[active] ?? hold);
 				return () => bus.setTrack?.(void 0);
 			}, [
 				definition.id,
@@ -19651,10 +19920,58 @@ window.__ModuleLoader__.load({
 				view?.mode,
 				skinId
 			]);
+			(0, react.useEffect)(() => {
+				const roam = def?.roam;
+				if (def === void 0 || roam === void 0) return void 0;
+				const roll = () => {
+					if (modeRef.current !== null || draggingRef.current) return;
+					if (Date.now() < touchLockUntilRef.current) return;
+					if (roamHeldRef.current || actHeldRef.current) return;
+					if (Math.random() >= roam.probability) return;
+					const span = roam.distanceMax - roam.distanceMin;
+					const distance = roam.distanceMin + Math.random() * span;
+					const directions = roam.directions ?? PET_ROAM_DIRECTIONS;
+					const direction = directions[Math.floor(Math.random() * directions.length)] ?? "left";
+					const travelled = bus.walk?.(direction, distance, roam.speed) ?? 0;
+					if (travelled === 0) return;
+					roamHeldRef.current = true;
+					bus.setTrack?.(roam.state);
+					roamTimerRef.current = window.setTimeout(() => {
+						roamTimerRef.current = 0;
+						if (!roamHeldRef.current) return;
+						roamHeldRef.current = false;
+						bus.setTrack?.(void 0);
+					}, Math.max(150, Math.abs(travelled) / roam.speed * 1e3));
+				};
+				let timer = 0;
+				const lead = window.setTimeout(() => {
+					roll();
+					timer = window.setInterval(roll, roam.intervalMs);
+				}, Math.round(roam.intervalMs / 2));
+				return () => {
+					window.clearTimeout(lead);
+					window.clearInterval(timer);
+					yieldRoam();
+				};
+			}, [definition.id, def]);
 			if (def === void 0 || view === void 0) return null;
 			const mode = view.mode;
 			const stats = def.stats ?? {};
 			const shop = def.shop;
+			const menuModes = declaredModes(def);
+			/** Action-button label for one mode (active = the button that leaves it). */
+			const modeLabel = (name, active) => {
+				if (name === "sleep") return tr(active ? "pet.gameplay.wake" : "pet.gameplay.sleep");
+				const declared = def.modes?.[name];
+				return (active ? declared?.activeLabel ?? declared?.label : declared?.label) ?? tr("pet.gameplay." + name);
+			};
+			/** Chip label for the mode the pet is in right now. */
+			const modeChip = (name) => {
+				if (name === "work") return tr("pet.gameplay.working");
+				if (name === "sleep") return tr("pet.gameplay.sleeping");
+				const declared = def.modes?.[name];
+				return declared?.activeLabel ?? declared?.label ?? tr("pet.gameplay." + name);
+			};
 			const buy = (itemId) => {
 				api.buy(itemId).then((result) => {
 					applyResult(result);
@@ -19712,7 +20029,7 @@ window.__ModuleLoader__.load({
 					}, entry.id)),
 					mode !== null && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
 						className: pet_module_css_default.gameplayModeChip,
-						children: tr(mode === "work" ? "pet.gameplay.working" : "pet.gameplay.sleeping")
+						children: modeChip(mode)
 					}),
 					open && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 						ref: cardRef,
@@ -19741,12 +20058,12 @@ window.__ModuleLoader__.load({
 							}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 								className: pet_module_css_default.gameplayActions,
 								children: [
-									def.sleep !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
+									menuModes.map((name) => /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
 										type: "button",
 										className: pet_module_css_default.action,
-										onClick: () => setMode(mode === "sleep" ? null : "sleep"),
-										children: tr(mode === "sleep" ? "pet.gameplay.wake" : "pet.gameplay.sleep")
-									}),
+										onClick: () => setMode(mode === name ? null : name),
+										children: modeLabel(name, mode === name)
+									}, name)),
 									shop !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
 										type: "button",
 										className: pet_module_css_default.action,
@@ -19911,6 +20228,7 @@ window.__ModuleLoader__.load({
 						onFeedbackDone: props.feedbackDone,
 						portalTarget: props.portalTarget,
 						dragDisabled: snapshot.gameplay?.mode === "work",
+						...aux === null ? {} : { bus: aux.bus },
 						...gameplay === void 0 || aux === null ? {} : {
 							onGameplayTap: (fx, fy) => aux.bus.tap?.(fx, fy),
 							onGameplayMenu: () => aux.bus.openCard?.(),
@@ -21925,7 +22243,7 @@ window.__ModuleLoader__.load({
 		/** The building package's version, when the bundle carries it. */
 		function bakedVersion$5() {
 			try {
-				return "0.3.23";
+				return "0.3.24";
 			} catch {
 				return;
 			}
@@ -38476,10 +38794,12 @@ window.__ModuleLoader__.load({
 			if (nested !== null) return nested;
 			for (const child of root.children) if (child.tagName === "BUTTON") return child;
 		}
-		/** Build the entry row (a detached button; insert once the shell is up). */
+		/** Build the entry row (detached; inserted once the shell is up). */
 		function createEntry$2(options) {
-			const entry = document.createElement("button");
-			entry.type = "button";
+			const actions = options.actions ?? [];
+			const composite = actions.length > 0;
+			const entry = document.createElement(composite ? "div" : "button");
+			if (!composite) entry.type = "button";
 			entry.setAttribute(options.rowAttribute, "");
 			if (options.plugin !== void 0) {
 				entry.setAttribute("data-dsh-plugin", options.plugin);
@@ -38491,17 +38811,57 @@ window.__ModuleLoader__.load({
 			const iconSpan = document.createElement("span");
 			iconSpan.className = options.css["entryIcon"] ?? "";
 			iconSpan.innerHTML = options.icon;
-			entry.append(iconSpan, labelSpan);
+			const main = composite ? document.createElement("button") : entry;
+			if (composite) {
+				main.type = "button";
+				main.className = options.css["entryMain"] ?? "";
+				main.append(iconSpan, labelSpan);
+				entry.append(main);
+			} else entry.append(iconSpan, labelSpan);
+			const actionButtons = [];
+			for (const action of actions) {
+				const button = document.createElement("button");
+				button.type = "button";
+				button.className = options.css["entryAction"] ?? "";
+				button.setAttribute("data-dsh-entry-action", action.id);
+				button.innerHTML = action.icon;
+				button.addEventListener("click", () => {
+					action.onClick(button);
+				});
+				entry.append(button);
+				actionButtons.push({
+					action,
+					button
+				});
+			}
+			let open = false;
+			const applyActions = () => {
+				for (const { action, button } of actionButtons) {
+					button.innerHTML = open || action.inactiveIcon === void 0 ? action.icon : action.inactiveIcon;
+					const text = action.label(open);
+					button.setAttribute("aria-label", text);
+					button.setAttribute("title", text);
+					if (action.inactiveIcon !== void 0) button.setAttribute("aria-expanded", String(open));
+				}
+			};
 			const applyLabel = () => {
-				entry.setAttribute("aria-label", options.label());
-				if (options.tooltip !== void 0) entry.setAttribute("title", options.tooltip());
+				main.setAttribute("aria-label", options.label());
+				if (options.tooltip !== void 0) main.setAttribute("title", options.tooltip());
 				labelSpan.textContent = options.label();
+				applyActions();
 			};
 			applyLabel();
-			entry.addEventListener("click", options.onToggle);
+			main.addEventListener("click", options.onToggle);
+			if (composite) entry.addEventListener("click", (event) => {
+				if (event.target === entry) options.onToggle();
+			});
 			return {
 				entry,
-				applyLabel
+				applyLabel,
+				setOpen: (next) => {
+					open = next;
+					applyActions();
+				}
 			};
 		}
 		/** Re-insert the entry after the New Session row (before the browser region). */
@@ -38525,7 +38885,7 @@ window.__ModuleLoader__.load({
 		*/
 		function mountSidebarEntry$5(options) {
 			if (typeof document !== "undefined" && document.querySelector(options.rowSelector) !== null) return () => {};
-			const { entry, applyLabel } = createEntry$2(options);
+			const { entry, applyLabel, setOpen } = createEntry$2(options);
 			let root;
 			let placed = false;
 			let unsubscribeRefresh;
@@ -38565,8 +38925,10 @@ window.__ModuleLoader__.load({
 			});
 			const unsubscribeActive = options.active === void 0 ? void 0 : (() => {
 				const syncActive = () => {
-					if (options.active.isOpen()) entry.dataset.active = "true";
+					const open = options.active.isOpen();
+					if (open) entry.dataset.active = "true";
 					else delete entry.dataset.active;
+					setOpen(open);
 				};
 				const unsubscribe = options.active.subscribe(syncActive);
 				syncActive();
@@ -38624,7 +38986,7 @@ window.__ModuleLoader__.load({
 		/** The building package's version, when the bundle carries it. */
 		function bakedVersion$4() {
 			try {
-				return "0.3.23";
+				return "0.3.24";
 			} catch {
 				return;
 			}
@@ -41055,7 +41417,7 @@ window.__ModuleLoader__.load({
 		/** The building package's version, when the bundle carries it. */
 		function bakedVersion$3() {
 			try {
-				return "0.3.23";
+				return "0.3.24";
 			} catch {
 				return;
 			}
@@ -41400,7 +41762,7 @@ window.__ModuleLoader__.load({
 					clearTimeout(timer);
 				};
 			}, [burstKey]);
-			if (state === "locked" || state === "missing") return null;
+			if (state === "locked" || state === "missing" || state === "on" && restoreLabel === "") return null;
 			const toggle = () => {
 				if (!actionable) return;
 				if (on) face.push();
@@ -41573,15 +41935,19 @@ window.__ModuleLoader__.load({
 		}
 		/**
 		* The preset a push-up restores: the preset the user was on before pulling the
-		* lever, else the deployment default. A candidate is skipped when it is the
-		* LiangShen preset itself (restoring it would be a no-op) or when the roster
-		* no longer supplies it.
+		* lever, else the deployment default, else the first usable roster row that is
+		* not the LiangShen preset. A candidate is skipped when it is the LiangShen
+		* preset itself (restoring it would be a no-op) or when the roster no longer
+		* supplies it. That last resort is what keeps the push direction alive when the
+		* deployment default IS LiangShen mode: `fallback` is skipped then, and after a
+		* reload `previous` is gone, so without it the gesture would have no target.
 		*/
 		function restoreTarget(facts) {
 			for (const candidate of [facts.previous, facts.fallback]) {
 				if (candidate === void 0 || candidate === "liangshen") continue;
 				if (facts.available.includes(candidate)) return candidate;
 			}
+			return facts.available.find((candidate) => candidate !== LIANGSHEN_PRESET_ID);
 		}
 		/** Whether the lever can act at all in its current state. */
 		function isActionable(state) {
@@ -42985,8 +43351,10 @@ window.__ModuleLoader__.load({
 		/** Route paths mirrored from the host (src/routes.ts ROUTES). */
 		const API = {
 			list: "/api/dsh-skill-explorer/list",
+			read: "/api/dsh-skill-explorer/read",
 			setEnabled: "/api/dsh-skill-explorer/set-enabled",
 			create: "/api/dsh-skill-explorer/create",
+			update: "/api/dsh-skill-explorer/update",
 			delete: "/api/dsh-skill-explorer/delete"
 		};
 		/** One thrown API error with the host-provided message. */
@@ -43016,6 +43384,17 @@ window.__ModuleLoader__.load({
 					body: payload
 				});
 			}
+			/** One skill's editable fields and body, resolved from the panel's path. */
+			async read(name, path) {
+				return this.request(`${API.read}?name=${encodeURIComponent(name)}&path=${encodeURIComponent(path)}`);
+			}
+			/** Rewrite an existing skill file in place (name and location unchanged). */
+			async update(payload) {
+				return this.request(API.update, {
+					method: "POST",
+					body: payload
+				});
+			}
 			/** Delete a skill (moves it into .trash). */
 			async remove(name, path) {
 				return this.request(API.delete, {
@@ -43027,9 +43406,10 @@ window.__ModuleLoader__.load({
 				});
 			}
 			async request(path, options = {}) {
+				const headers = options.body === void 0 ? new Headers() : new Headers({ "content-type": "application/json" });
 				const response = await fetch(path, {
 					method: options.method ?? "GET",
-					headers: options.body === void 0 ? void 0 : { "content-type": "application/json" },
+					headers,
 					body: options.body === void 0 ? void 0 : JSON.stringify(options.body)
 				});
 				let body;
@@ -43053,6 +43433,7 @@ window.__ModuleLoader__.load({
 			"panel.title": "技能中心",
 			"tab.list": "技能",
 			"tab.create": "创建",
+			"tab.edit": "编辑技能",
 			"group.bundled": "系统内置",
 			"group.project-dsh": "项目技能（.dsh/skills）",
 			"group.project-agents": "项目技能（.agents/skills）",
@@ -43085,6 +43466,7 @@ window.__ModuleLoader__.load({
 			"list.delete": "删除",
 			"list.deleteConfirm": "删除技能「{name}」？将移入 .trash。",
 			"list.deleteFailed": "删除失败：{error}",
+			"list.edit": "编辑",
 			"create.root": "创建位置",
 			"create.root.user": "用户技能（~/.dsh/skills，所有项目可用）",
 			"create.root.project": "项目技能（当前项目 .dsh/skills）",
@@ -43098,6 +43480,13 @@ window.__ModuleLoader__.load({
 			"create.created": "已创建：{path}",
 			"create.failed": "创建失败：{error}",
 			"create.note": "创建后立即生效（skill-filesystem 会热扫描）。内容会作为指令注入模型上下文——不要写入敏感信息。",
+			"edit.name": "技能名（不可修改）",
+			"edit.loading": "正在读取技能内容…",
+			"edit.loadFailed": "读取失败：{error}",
+			"edit.submit": "保存修改",
+			"edit.back": "返回列表",
+			"edit.failed": "保存失败：{error}",
+			"edit.note": "只改描述、适用场景与正文：技能名、位置和启用状态保持不变。保存后立即生效（skill-filesystem 会热扫描）。",
 			"filter.workspaceLabel": "工作区",
 			"filter.workspaceAll": "全部工作区",
 			"filter.workspaceCurrent": "当前工作区 ({name})",
@@ -43118,6 +43507,7 @@ window.__ModuleLoader__.load({
 			"panel.title": "Skill Center",
 			"tab.list": "Skills",
 			"tab.create": "Create",
+			"tab.edit": "Edit skill",
 			"group.bundled": "System bundled",
 			"group.project-dsh": "Project skills (.dsh/skills)",
 			"group.project-agents": "Project skills (.agents/skills)",
@@ -43150,6 +43540,7 @@ window.__ModuleLoader__.load({
 			"list.delete": "Delete",
 			"list.deleteConfirm": "Delete skill \"{name}\"? It moves into .trash.",
 			"list.deleteFailed": "Delete failed: {error}",
+			"list.edit": "Edit",
 			"create.root": "Location",
 			"create.root.user": "User skills (~/.dsh/skills, available to all projects)",
 			"create.root.project": "Project skills (current project .dsh/skills)",
@@ -43163,6 +43554,13 @@ window.__ModuleLoader__.load({
 			"create.created": "Created: {path}",
 			"create.failed": "Create failed: {error}",
 			"create.note": "The skill takes effect immediately (skill-filesystem hot-scans). Its content is injected into the model context as instructions — do not put sensitive information in it.",
+			"edit.name": "Skill name (fixed)",
+			"edit.loading": "Loading the skill…",
+			"edit.loadFailed": "Failed to load: {error}",
+			"edit.submit": "Save changes",
+			"edit.back": "Back to list",
+			"edit.failed": "Save failed: {error}",
+			"edit.note": "Only the description, when-to-use, and body change: the name, location, and enabled state stay as they are. The edit takes effect immediately (skill-filesystem hot-scans).",
 			"filter.workspaceLabel": "Workspace",
 			"filter.workspaceAll": "All workspaces",
 			"filter.workspaceCurrent": "Current workspace ({name})",
@@ -43250,7 +43648,7 @@ window.__ModuleLoader__.load({
 		}
 		//#endregion
 		//#region \0dsh-css:packages/dsh-skill-explorer/src/client/skill-panel.module.css.mjs
-		const css$7 = ".cBrkua_entry{box-sizing:border-box;width:100%;height:36px;color:var(--dsw-alias-label-secondary);cursor:pointer;white-space:nowrap;background:0 0;border:none;border-radius:8px;align-items:center;gap:8px;padding:0 10px;font-size:13px;display:flex}.cBrkua_entry:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.cBrkua_entryIcon{flex:none;justify-content:center;align-items:center;width:24px;height:24px;display:inline-flex}.cBrkua_entryIcon svg{width:18px;height:18px;display:block}.cBrkua_entryLabel{text-overflow:ellipsis;overflow:hidden}[data-dsh-frame][data-sidebar-collapsed] .cBrkua_entry,[data-sidebar-collapsed] .cBrkua_entry{border-radius:50%;justify-content:center;width:36px;height:36px;margin:0 auto 12px;padding:0}[data-dsh-frame][data-sidebar-collapsed] .cBrkua_entryLabel,[data-sidebar-collapsed] .cBrkua_entryLabel{display:none}.cBrkua_overlay{background:var(--dsw-alias-bg-mask-2,#080a1073);z-index:9999;justify-content:center;align-items:center;font-family:system-ui,-apple-system,Segoe UI,sans-serif;display:flex;position:fixed;inset:0}.cBrkua_card{background:var(--dsw-alias-bg-overlay,#fdfdfd);width:min(780px,92vw);max-height:84vh;color:var(--dsw-alias-label-primary,#1c1e26);border-radius:12px;flex-direction:column;display:flex;overflow:hidden;box-shadow:0 18px 60px #00000059}.cBrkua_head{background:var(--dsw-alias-bg-base,#fff);align-items:center;gap:10px;padding:12px 16px;display:flex}.cBrkua_headTitle{flex:1;margin:0;font-size:15px;font-weight:600}.cBrkua_headButton{color:var(--dsw-alias-label-primary,#3a3f4b);cursor:pointer;background:#f2f3f5;border:none;border-radius:6px;padding:4px 10px;font-size:12px}.cBrkua_headButton:hover{background:#e7e8ea}.cBrkua_tabs{background:var(--dsw-alias-bg-layer-1,#f7f8fa);gap:4px;padding:8px 16px 0;display:flex}.cBrkua_tab{border:1px solid var(--dsw-alias-border-l1,#d7dae0);color:var(--dsw-alias-label-secondary,#8a8f9c);cursor:pointer;background:0 0;border-bottom:none;border-radius:8px 8px 0 0;padding:6px 14px;font-size:12px}.cBrkua_tabActive{background:var(--dsw-alias-bg-base,#fdfdfd);color:var(--dsw-alias-label-primary,#1c1e26);font-weight:600}.cBrkua_body{padding:12px 16px;overflow:auto}.cBrkua_status{color:var(--dsw-alias-label-secondary,#6b7280);text-align:center;padding:18px;font-size:13px}.cBrkua_group{margin-bottom:18px}.cBrkua_groupTitle{color:var(--dsw-alias-label-primary,#2f3542);margin:0 0 2px;font-size:13px;font-weight:600}.cBrkua_groupHint{color:var(--dsw-alias-label-secondary,#8a8f9c);margin:0 0 8px;font-size:11px}.cBrkua_count{color:var(--dsw-alias-label-secondary,#8a8f9c);margin-left:6px;font-weight:400}.cBrkua_skill{border:1px solid var(--dsw-alias-border-l1,#e5e7eb);background:var(--dsw-alias-bg-base,#fff);border-radius:8px;margin-bottom:8px;padding:10px 12px}.cBrkua_skillHeader{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.cBrkua_skillName{color:var(--dsw-alias-label-primary,#111827);font-family:ui-monospace,Consolas,monospace;font-size:13px;font-weight:600}.cBrkua_badge{background:var(--dsw-alias-state-business-secondary,#eef2ff);color:var(--dsw-alias-state-business-primary,#4353a3);border:1px solid var(--dsw-alias-state-business-tertiary,#dde3f8);border-radius:99px;padding:1px 6px;font-size:10px}.cBrkua_badgeInvokable{background:var(--dsw-alias-state-success-secondary,#e6f4ea);color:var(--dsw-alias-state-success-primary,#0d6832);border-color:var(--dsw-alias-state-success-tertiary,#b7e1cd)}.cBrkua_badgeWorkspace{background:var(--dsw-alias-bg-layer-2,#ebeef5);color:var(--dsw-alias-label-secondary,#4b5563);border-color:var(--dsw-alias-border-l1,#d1d5db)}.cBrkua_badgeIsolated{color:#b45309;cursor:help;background:#f59e0b1f;border-color:#f59e0b59}.cBrkua_skillIsolated{opacity:.76}.cBrkua_skillIsolated:hover{opacity:.98}.cBrkua_filterBar{background:var(--dsw-alias-bg-layer-1,#f7f8fa);border-radius:6px;flex-direction:column;gap:6px;margin-bottom:12px;padding:8px 10px;font-size:12px;display:flex}.cBrkua_filterRow{align-items:center;gap:8px;display:flex}.cBrkua_filterLabel{color:var(--dsw-alias-label-secondary,#6b7280);flex:none;font-weight:500}.cBrkua_filterInput,.cBrkua_filterSelect{border:1px solid var(--dsw-alias-border-l1,#d7dae0);background:var(--dsw-alias-bg-base,#fff);max-width:280px;height:26px;color:var(--dsw-alias-label-primary,#1c1e26);border-radius:4px;outline:none;flex:1;padding:0 8px;font-size:12px}.cBrkua_filterInput:focus,.cBrkua_filterSelect:focus{border-color:var(--dsw-alias-border-l2,#d1d5db)}.cBrkua_filterClear{border:1px solid var(--dsw-alias-border-l1,#d7dae0);height:24px;color:var(--dsw-alias-label-secondary,#6b7280);cursor:pointer;background:0 0;border-radius:4px;flex:none;padding:0 10px;font-size:12px}.cBrkua_filterClear:hover{color:var(--dsw-alias-label-primary,#1c1e26)}.cBrkua_filterEmpty{color:var(--dsw-alias-label-secondary,#6b7280);text-align:center;padding:18px 0;font-size:13px}.cBrkua_switch{cursor:pointer;background:0 0;border:none;border-radius:99px;align-items:center;margin-left:auto;padding:2px;display:inline-flex}.cBrkua_switchTrack{background:var(--dsw-alias-border-l2,#d1d5db);border-radius:99px;flex:none;width:30px;height:16px;transition:background .18s;position:relative}.cBrkua_switchThumb{background:var(--dsw-alias-bg-base,#fff);border-radius:50%;width:12px;height:12px;transition:left .18s;position:absolute;top:2px;left:2px;box-shadow:0 1px 2px #00000040}.cBrkua_switch[aria-checked=true] .cBrkua_switchTrack{background:var(--dsw-alias-state-success-primary,#10b981)}.cBrkua_switch[aria-checked=true] .cBrkua_switchThumb{left:16px}.cBrkua_deleteButton{color:#d92d20;cursor:pointer;background:#feeceb;border:none;border-radius:6px;padding:3px 9px;font-size:11px}.cBrkua_deleteButton:hover{background:#fbdcd9}.cBrkua_skillDesc{color:var(--dsw-alias-label-primary,#3a3f4b);margin:6px 0 0;font-size:12px;line-height:1.5}.cBrkua_skillWhen{color:var(--dsw-alias-label-secondary,#8a8f9c);margin:4px 0 0;font-size:11px}.cBrkua_skillPath{color:var(--dsw-alias-label-tertiary,#a2a7b3);word-break:break-all;margin:6px 0 0;font-family:ui-monospace,Consolas,monospace;font-size:10px}.cBrkua_feedback{color:var(--dsw-alias-state-error-primary,#b42318);font-size:11px}.cBrkua_feedbackOk{color:var(--dsw-alias-state-success-primary,#0f9d6e)}.cBrkua_form{flex-direction:column;gap:8px;max-width:640px;display:flex}.cBrkua_formLabel{color:var(--dsw-alias-label-secondary,#5f6672);flex-direction:column;gap:4px;font-size:12px;display:flex}.cBrkua_formInput{box-sizing:border-box;background:var(--dsw-alias-bg-layer-1,#f7f8fa);width:100%;color:var(--dsw-alias-label-primary,#1c1e26);border:1px solid #0000;border-radius:6px;padding:6px 8px;font-size:12px}select.cBrkua_formInput{height:30px;padding:0 8px}.cBrkua_formTextarea{resize:vertical;min-height:120px;font-family:ui-monospace,monospace}.cBrkua_formButton{color:#fff;cursor:pointer;background:#111;border:1px solid #0000;border-radius:6px;align-self:flex-start;padding:6px 14px;font-size:12px}.cBrkua_formButton:hover{background:#2a2a2c}body[data-ds-dark-theme] .cBrkua_formButton{color:#111827;background:#e5e5ea}body[data-ds-dark-theme] .cBrkua_formButton:hover{background:#d1d5db}.cBrkua_note{color:var(--dsw-alias-label-tertiary,#a0a5b1);margin-top:10px;font-size:11px;line-height:1.7}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_card,body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_head{background:#2c2c2e}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_tabs{background:#1e1e1e}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_skill{background:#48484a;border-color:#ffffff14}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_badge{color:#a5b4fc;background:#6378dc38;border-color:#6378dc66}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_badgeInvokable{color:#30d158;background:#30d15826;border-color:#30d1584d}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_switchThumb{background:#fff}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_tab{color:#ffffff80}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_tabActive{color:#fff;background:#3a3a3c;border:.5px solid #ffffff14;box-shadow:0 1px 3px #0000004d}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_formInput{background:#1c1c1e;border-color:#ffffff0f}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_headButton{color:#ffffffd9;background:#ffffff1a;border-color:#0000}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_headButton:hover{background:#ffffff26}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_headButton:active{background:#ffffff0d}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_deleteButton{color:#ff6b61;background:#ff3b3029;border-color:#0000}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_deleteButton:hover{background:#ff3b3042}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_filterBar{background:#1e1e1e}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_filterInput,body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_filterSelect{color:#fff;background:#2c2c2e;border-color:#ffffff1a}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_filterClear{color:#ffffffb3;border-color:#ffffff1a}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_filterEmpty{color:#ffffffb3}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_badgeWorkspace{color:#ffffffb3;background:#ffffff1a;border-color:#ffffff26}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_badgeIsolated{color:#fbbf24;background:#f59e0b33;border-color:#f59e0b66}";
+		const css$7 = ".cBrkua_entry{box-sizing:border-box;width:100%;height:36px;color:var(--dsw-alias-label-secondary);cursor:pointer;white-space:nowrap;background:0 0;border:none;border-radius:8px;align-items:center;gap:8px;padding:0 10px;font-size:13px;display:flex}.cBrkua_entry:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.cBrkua_entryIcon{flex:none;justify-content:center;align-items:center;width:24px;height:24px;display:inline-flex}.cBrkua_entryIcon svg{width:18px;height:18px;display:block}.cBrkua_entryLabel{text-overflow:ellipsis;overflow:hidden}[data-dsh-frame][data-sidebar-collapsed] .cBrkua_entry,[data-sidebar-collapsed] .cBrkua_entry{border-radius:50%;justify-content:center;width:36px;height:36px;margin:0 auto 12px;padding:0}[data-dsh-frame][data-sidebar-collapsed] .cBrkua_entryLabel,[data-sidebar-collapsed] .cBrkua_entryLabel{display:none}.cBrkua_overlay{background:var(--dsw-alias-bg-mask-2,#080a1073);z-index:9999;justify-content:center;align-items:center;font-family:system-ui,-apple-system,Segoe UI,sans-serif;display:flex;position:fixed;inset:0}.cBrkua_card{background:var(--dsw-alias-bg-overlay,#fdfdfd);width:min(780px,92vw);max-height:84vh;color:var(--dsw-alias-label-primary,#1c1e26);border-radius:12px;flex-direction:column;display:flex;overflow:hidden;box-shadow:0 18px 60px #00000059}.cBrkua_head{background:var(--dsw-alias-bg-base,#fff);align-items:center;gap:10px;padding:12px 16px;display:flex}.cBrkua_headTitle{flex:1;margin:0;font-size:15px;font-weight:600}.cBrkua_headButton{color:var(--dsw-alias-label-primary,#3a3f4b);cursor:pointer;background:#f2f3f5;border:none;border-radius:6px;padding:4px 10px;font-size:12px}.cBrkua_headButton:hover{background:#e7e8ea}.cBrkua_tabs{background:var(--dsw-alias-bg-layer-1,#f7f8fa);gap:4px;padding:8px 16px 0;display:flex}.cBrkua_tab{border:1px solid var(--dsw-alias-border-l1,#d7dae0);color:var(--dsw-alias-label-secondary,#8a8f9c);cursor:pointer;background:0 0;border-bottom:none;border-radius:8px 8px 0 0;padding:6px 14px;font-size:12px}.cBrkua_tabActive{background:var(--dsw-alias-bg-base,#fdfdfd);color:var(--dsw-alias-label-primary,#1c1e26);font-weight:600}.cBrkua_body{padding:12px 16px;overflow:auto}.cBrkua_status{color:var(--dsw-alias-label-secondary,#6b7280);text-align:center;padding:18px;font-size:13px}.cBrkua_group{margin-bottom:18px}.cBrkua_groupTitle{color:var(--dsw-alias-label-primary,#2f3542);margin:0 0 2px;font-size:13px;font-weight:600}.cBrkua_groupHint{color:var(--dsw-alias-label-secondary,#8a8f9c);margin:0 0 8px;font-size:11px}.cBrkua_count{color:var(--dsw-alias-label-secondary,#8a8f9c);margin-left:6px;font-weight:400}.cBrkua_skill{border:1px solid var(--dsw-alias-border-l1,#e5e7eb);background:var(--dsw-alias-bg-base,#fff);border-radius:8px;margin-bottom:8px;padding:10px 12px}.cBrkua_skillHeader{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.cBrkua_skillName{color:var(--dsw-alias-label-primary,#111827);font-family:ui-monospace,Consolas,monospace;font-size:13px;font-weight:600}.cBrkua_badge{background:var(--dsw-alias-state-business-secondary,#eef2ff);color:var(--dsw-alias-state-business-primary,#4353a3);border:1px solid var(--dsw-alias-state-business-tertiary,#dde3f8);border-radius:99px;padding:1px 6px;font-size:10px}.cBrkua_badgeInvokable{background:var(--dsw-alias-state-success-secondary,#e6f4ea);color:var(--dsw-alias-state-success-primary,#0d6832);border-color:var(--dsw-alias-state-success-tertiary,#b7e1cd)}.cBrkua_badgeWorkspace{background:var(--dsw-alias-bg-layer-2,#ebeef5);color:var(--dsw-alias-label-secondary,#4b5563);border-color:var(--dsw-alias-border-l1,#d1d5db)}.cBrkua_badgeIsolated{color:#b45309;cursor:help;background:#f59e0b1f;border-color:#f59e0b59}.cBrkua_skillIsolated{opacity:.76}.cBrkua_skillIsolated:hover{opacity:.98}.cBrkua_filterBar{background:var(--dsw-alias-bg-layer-1,#f7f8fa);border-radius:6px;flex-direction:column;gap:6px;margin-bottom:12px;padding:8px 10px;font-size:12px;display:flex}.cBrkua_filterRow{align-items:center;gap:8px;display:flex}.cBrkua_filterLabel{color:var(--dsw-alias-label-secondary,#6b7280);flex:none;font-weight:500}.cBrkua_filterInput,.cBrkua_filterSelect{border:1px solid var(--dsw-alias-border-l1,#d7dae0);background:var(--dsw-alias-bg-base,#fff);max-width:280px;height:26px;color:var(--dsw-alias-label-primary,#1c1e26);border-radius:4px;outline:none;flex:1;padding:0 8px;font-size:12px}.cBrkua_filterInput:focus,.cBrkua_filterSelect:focus{border-color:var(--dsw-alias-border-l2,#d1d5db)}.cBrkua_filterClear{border:1px solid var(--dsw-alias-border-l1,#d7dae0);height:24px;color:var(--dsw-alias-label-secondary,#6b7280);cursor:pointer;background:0 0;border-radius:4px;flex:none;padding:0 10px;font-size:12px}.cBrkua_filterClear:hover{color:var(--dsw-alias-label-primary,#1c1e26)}.cBrkua_filterEmpty{color:var(--dsw-alias-label-secondary,#6b7280);text-align:center;padding:18px 0;font-size:13px}.cBrkua_switch{cursor:pointer;background:0 0;border:none;border-radius:99px;align-items:center;margin-left:auto;padding:2px;display:inline-flex}.cBrkua_switchTrack{background:var(--dsw-alias-border-l2,#d1d5db);border-radius:99px;flex:none;width:30px;height:16px;transition:background .18s;position:relative}.cBrkua_switchThumb{background:var(--dsw-alias-bg-base,#fff);border-radius:50%;width:12px;height:12px;transition:left .18s;position:absolute;top:2px;left:2px;box-shadow:0 1px 2px #00000040}.cBrkua_switch[aria-checked=true] .cBrkua_switchTrack{background:var(--dsw-alias-state-success-primary,#10b981)}.cBrkua_switch[aria-checked=true] .cBrkua_switchThumb{left:16px}.cBrkua_editButton{color:var(--dsw-alias-label-primary,#3a3f4b);cursor:pointer;background:#f2f3f5;border:none;border-radius:6px;padding:3px 9px;font-size:11px}.cBrkua_editButton:hover{background:#e7e8ea}.cBrkua_deleteButton{color:#d92d20;cursor:pointer;background:#feeceb;border:none;border-radius:6px;padding:3px 9px;font-size:11px}.cBrkua_deleteButton:hover{background:#fbdcd9}.cBrkua_skillDesc{color:var(--dsw-alias-label-primary,#3a3f4b);margin:6px 0 0;font-size:12px;line-height:1.5}.cBrkua_skillWhen{color:var(--dsw-alias-label-secondary,#8a8f9c);margin:4px 0 0;font-size:11px}.cBrkua_skillPath{color:var(--dsw-alias-label-tertiary,#a2a7b3);word-break:break-all;margin:6px 0 0;font-family:ui-monospace,Consolas,monospace;font-size:10px}.cBrkua_feedback{color:var(--dsw-alias-state-error-primary,#b42318);font-size:11px}.cBrkua_feedbackOk{color:var(--dsw-alias-state-success-primary,#0f9d6e)}.cBrkua_form{flex-direction:column;gap:8px;max-width:640px;display:flex}.cBrkua_formLabel{color:var(--dsw-alias-label-secondary,#5f6672);flex-direction:column;gap:4px;font-size:12px;display:flex}.cBrkua_formInput{box-sizing:border-box;background:var(--dsw-alias-bg-layer-1,#f7f8fa);width:100%;color:var(--dsw-alias-label-primary,#1c1e26);border:1px solid #0000;border-radius:6px;padding:6px 8px;font-size:12px}select.cBrkua_formInput{height:30px;padding:0 8px}.cBrkua_formTextarea{resize:vertical;min-height:120px;font-family:ui-monospace,monospace}.cBrkua_formActionsRow{gap:8px;display:flex}.cBrkua_formButtonGhost{color:var(--dsw-alias-label-primary,#3a3f4b);cursor:pointer;background:#f2f3f5;border:none;border-radius:6px;align-self:flex-start;padding:6px 14px;font-size:12px}.cBrkua_formButtonGhost:hover{background:#e7e8ea}body[data-ds-dark-theme] .cBrkua_formButtonGhost{color:#e5e5ea;background:#2a2a2c}body[data-ds-dark-theme] .cBrkua_formButtonGhost:hover{background:#3a3a3c}.cBrkua_formButton{color:#fff;cursor:pointer;background:#111;border:1px solid #0000;border-radius:6px;align-self:flex-start;padding:6px 14px;font-size:12px}.cBrkua_formButton:hover{background:#2a2a2c}body[data-ds-dark-theme] .cBrkua_formButton{color:#111827;background:#e5e5ea}body[data-ds-dark-theme] .cBrkua_formButton:hover{background:#d1d5db}.cBrkua_note{color:var(--dsw-alias-label-tertiary,#a0a5b1);margin-top:10px;font-size:11px;line-height:1.7}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_card,body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_head{background:#2c2c2e}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_tabs{background:#1e1e1e}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_skill{background:#48484a;border-color:#ffffff14}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_badge{color:#a5b4fc;background:#6378dc38;border-color:#6378dc66}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_badgeInvokable{color:#30d158;background:#30d15826;border-color:#30d1584d}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_switchThumb{background:#fff}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_tab{color:#ffffff80}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_tabActive{color:#fff;background:#3a3a3c;border:.5px solid #ffffff14;box-shadow:0 1px 3px #0000004d}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_formInput{background:#1c1c1e;border-color:#ffffff0f}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_headButton{color:#ffffffd9;background:#ffffff1a;border-color:#0000}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_headButton:hover{background:#ffffff26}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_headButton:active{background:#ffffff0d}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_deleteButton{color:#ff6b61;background:#ff3b3029;border-color:#0000}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_deleteButton:hover{background:#ff3b3042}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_filterBar{background:#1e1e1e}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_filterInput,body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_filterSelect{color:#fff;background:#2c2c2e;border-color:#ffffff1a}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_filterClear{color:#ffffffb3;border-color:#ffffff1a}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_filterEmpty{color:#ffffffb3}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_badgeWorkspace{color:#ffffffb3;background:#ffffff1a;border-color:#ffffff26}body[data-ds-dark-theme]:not([data-dsh-skin]) .cBrkua_badgeIsolated{color:#fbbf24;background:#f59e0b33;border-color:#f59e0b66}";
 		const tagId$7 = "@linxin666/dsh-web-all/packages/dsh-skill-explorer/src/client/skill-panel.module.css";
 		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId$7) + "]") === null) {
 			const tag = document.createElement("style");
@@ -43268,6 +43666,7 @@ window.__ModuleLoader__.load({
 			"card": "cBrkua_card",
 			"count": "cBrkua_count",
 			"deleteButton": "cBrkua_deleteButton",
+			"editButton": "cBrkua_editButton",
 			"entry": "cBrkua_entry",
 			"entryIcon": "cBrkua_entryIcon",
 			"entryLabel": "cBrkua_entryLabel",
@@ -43281,7 +43680,9 @@ window.__ModuleLoader__.load({
 			"filterRow": "cBrkua_filterRow",
 			"filterSelect": "cBrkua_filterSelect",
 			"form": "cBrkua_form",
+			"formActionsRow": "cBrkua_formActionsRow",
 			"formButton": "cBrkua_formButton",
+			"formButtonGhost": "cBrkua_formButtonGhost",
 			"formInput": "cBrkua_formInput",
 			"formLabel": "cBrkua_formLabel",
 			"formTextarea": "cBrkua_formTextarea",
@@ -43311,8 +43712,8 @@ window.__ModuleLoader__.load({
 		//#endregion
 		//#region ../dsh-skill-explorer/src/client/SkillPanel.tsx
 		/**
-		* Skill center panel (browser half): an overlay modal with two tabs — the
-		* grouped skill list (enable/disable switch, delete) and a create form.
+		* Skill center panel (browser half): an overlay modal with the grouped skill
+		* list (enable/disable switch, edit, delete) plus create and edit forms.
 		* Talks to the host route family through SkillApi.
 		*/
 		/** Marks shown next to a skill (model/user invocable). */
@@ -43328,8 +43729,8 @@ window.__ModuleLoader__.load({
 			const translated = tt(key);
 			return translated === key ? provider : translated;
 		}
-		/** One skill card: name, badges, toggle switch, delete button. */
-		function SkillCard({ skill, api, onChanged }) {
+		/** One skill card: name, badges, toggle switch, edit and delete buttons. */
+		function SkillCard({ skill, api, onChanged, onEdit }) {
 			const [busy, setBusy] = (0, react.useState)(false);
 			const [error, setError] = (0, react.useState)(void 0);
 			const busyRef = (0, react.useRef)(false);
@@ -43420,6 +43821,15 @@ window.__ModuleLoader__.load({
 							}),
 							skill.path !== void 0 && skill.linked !== true && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
 								type: "button",
+								className: skill_panel_module_css_default.editButton,
+								disabled: busy,
+								onClick: () => {
+									onEdit(skill);
+								},
+								children: tt("list.edit")
+							}),
+							skill.path !== void 0 && skill.linked !== true && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
+								type: "button",
 								className: skill_panel_module_css_default.deleteButton,
 								disabled: busy,
 								onClick: () => {
@@ -43449,7 +43859,7 @@ window.__ModuleLoader__.load({
 			});
 		}
 		/** The grouped skill list tab. */
-		function ListTab({ api, refreshTick, onCwd }) {
+		function ListTab({ api, refreshTick, onCwd, onEdit }) {
 			const [payload, setPayload] = (0, react.useState)(void 0);
 			const [selectedWorkspace, setSelectedWorkspace] = (0, react.useState)("all");
 			const [query, setQuery] = (0, react.useState)("");
@@ -43465,6 +43875,7 @@ window.__ModuleLoader__.load({
 					setError(void 0);
 				} catch (err) {
 					if (seq !== loadSeq.current) return;
+					console.error("[dsh-skill-explorer] failed to load skills:", err);
 					setError(tt("list.loadFailed", { error: err instanceof Error ? err.message : String(err) }));
 				}
 			};
@@ -43577,7 +43988,8 @@ window.__ModuleLoader__.load({
 								api,
 								onChanged: () => {
 									load();
-								}
+								},
+								onEdit
 							}, skill.name))
 						]
 					}, group.key);
@@ -43710,11 +44122,155 @@ window.__ModuleLoader__.load({
 				]
 			});
 		}
+		/** The edit form tab: loads the skill's editable fields and rewrites it in place. */
+		function EditTab({ api, skill, onDone, onCancel }) {
+			const skillPath = skill.path ?? "";
+			const [description, setDescription] = (0, react.useState)("");
+			const [whenToUse, setWhenToUse] = (0, react.useState)("");
+			const [content, setContent] = (0, react.useState)("");
+			const [loading, setLoading] = (0, react.useState)(true);
+			const [busy, setBusy] = (0, react.useState)(false);
+			const [error, setError] = (0, react.useState)(void 0);
+			(0, react.useEffect)(() => {
+				let cancelled = false;
+				const load = async () => {
+					try {
+						const current = await api.read(skill.name, skillPath);
+						if (cancelled) return;
+						setDescription(current.description);
+						setWhenToUse(current.whenToUse ?? "");
+						setContent(current.content);
+						setError(void 0);
+					} catch (err) {
+						if (cancelled) return;
+						setError(tt("edit.loadFailed", { error: err instanceof Error ? err.message : String(err) }));
+					} finally {
+						if (!cancelled) setLoading(false);
+					}
+				};
+				load();
+				return () => {
+					cancelled = true;
+				};
+			}, [
+				api,
+				skill.name,
+				skillPath
+			]);
+			const submit = async (event) => {
+				event.preventDefault();
+				if (description.trim() === "" || content.trim() === "") {
+					setError(tt("create.empty"));
+					return;
+				}
+				setBusy(true);
+				setError(void 0);
+				try {
+					await api.update({
+						name: skill.name,
+						path: skillPath,
+						description: description.trim(),
+						whenToUse: whenToUse.trim() || void 0,
+						content
+					});
+					onDone();
+				} catch (err) {
+					setError(tt("edit.failed", { error: err instanceof Error ? err.message : String(err) }));
+				} finally {
+					setBusy(false);
+				}
+			};
+			if (loading) return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+				className: skill_panel_module_css_default.status,
+				children: tt("edit.loading")
+			});
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("form", {
+				className: skill_panel_module_css_default.form,
+				onSubmit: (event) => {
+					submit(event);
+				},
+				children: [
+					/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("label", {
+						className: skill_panel_module_css_default.formLabel,
+						children: [tt("edit.name"), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("input", {
+							className: skill_panel_module_css_default.formInput,
+							value: skill.name,
+							readOnly: true
+						})]
+					}),
+					/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("label", {
+						className: skill_panel_module_css_default.formLabel,
+						children: [tt("create.description"), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("input", {
+							className: skill_panel_module_css_default.formInput,
+							value: description,
+							onChange: (event) => {
+								setDescription(event.target.value);
+							}
+						})]
+					}),
+					/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("label", {
+						className: skill_panel_module_css_default.formLabel,
+						children: [tt("create.whenToUse"), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("input", {
+							className: skill_panel_module_css_default.formInput,
+							value: whenToUse,
+							onChange: (event) => {
+								setWhenToUse(event.target.value);
+							}
+						})]
+					}),
+					/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("label", {
+						className: skill_panel_module_css_default.formLabel,
+						children: [tt("create.content"), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("textarea", {
+							className: `${skill_panel_module_css_default.formInput} ${skill_panel_module_css_default.formTextarea}`,
+							value: content,
+							onChange: (event) => {
+								setContent(event.target.value);
+							}
+						})]
+					}),
+					/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+						className: skill_panel_module_css_default.formActionsRow,
+						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
+							type: "button",
+							className: skill_panel_module_css_default.formButtonGhost,
+							disabled: busy,
+							onClick: onCancel,
+							children: tt("edit.back")
+						}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
+							type: "submit",
+							className: skill_panel_module_css_default.formButton,
+							disabled: busy,
+							children: tt("edit.submit")
+						})]
+					}),
+					error !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+						className: skill_panel_module_css_default.feedback,
+						children: error
+					}),
+					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+						className: skill_panel_module_css_default.note,
+						children: tt("edit.note")
+					})
+				]
+			});
+		}
 		/** The skill center overlay modal. */
 		function SkillPanel({ api, onClose }) {
 			const [tab, setTab] = (0, react.useState)("list");
 			const [cwd, setCwd] = (0, react.useState)(void 0);
 			const [refreshTick, setRefreshTick] = (0, react.useState)(0);
+			const [editing, setEditing] = (0, react.useState)(void 0);
+			/** Open the edit form for one card (issue #1622). */
+			const openEdit = (skill) => {
+				setEditing(skill);
+				setTab("edit");
+			};
+			/** Leave the edit form; the list refetches so the saved copy is visible. */
+			const closeEdit = () => {
+				setEditing(void 0);
+				setTab("list");
+				setRefreshTick((tick) => tick + 1);
+			};
 			(0, react.useEffect)(() => {
 				const onKey = (event) => {
 					if (event.key !== "Escape") return;
@@ -43762,39 +44318,60 @@ window.__ModuleLoader__.load({
 							className: skill_panel_module_css_default.tabs,
 							"data-dsh-part": "tab-bar",
 							role: "tablist",
-							children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
-								type: "button",
-								role: "tab",
-								className: `${skill_panel_module_css_default.tab} ${tab === "list" ? skill_panel_module_css_default.tabActive : ""}`,
-								"data-dsh-part": "tab",
-								"aria-selected": tab === "list",
-								"data-active": tab === "list" ? "" : void 0,
-								onClick: () => {
-									setTab("list");
-								},
-								children: tt("tab.list")
-							}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
-								type: "button",
-								role: "tab",
-								className: `${skill_panel_module_css_default.tab} ${tab === "create" ? skill_panel_module_css_default.tabActive : ""}`,
-								"data-dsh-part": "tab",
-								"aria-selected": tab === "create",
-								"data-active": tab === "create" ? "" : void 0,
-								onClick: () => {
-									setTab("create");
-								},
-								children: tt("tab.create")
-							})]
+							children: [
+								/* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
+									type: "button",
+									role: "tab",
+									className: `${skill_panel_module_css_default.tab} ${tab === "list" ? skill_panel_module_css_default.tabActive : ""}`,
+									"data-dsh-part": "tab",
+									"aria-selected": tab === "list",
+									"data-active": tab === "list" ? "" : void 0,
+									onClick: () => {
+										setTab("list");
+									},
+									children: tt("tab.list")
+								}),
+								/* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
+									type: "button",
+									role: "tab",
+									className: `${skill_panel_module_css_default.tab} ${tab === "create" ? skill_panel_module_css_default.tabActive : ""}`,
+									"data-dsh-part": "tab",
+									"aria-selected": tab === "create",
+									"data-active": tab === "create" ? "" : void 0,
+									onClick: () => {
+										setTab("create");
+									},
+									children: tt("tab.create")
+								}),
+								editing !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
+									type: "button",
+									role: "tab",
+									className: `${skill_panel_module_css_default.tab} ${tab === "edit" ? skill_panel_module_css_default.tabActive : ""}`,
+									"data-dsh-part": "tab",
+									"aria-selected": tab === "edit",
+									"data-active": tab === "edit" ? "" : void 0,
+									onClick: () => {
+										setTab("edit");
+									},
+									children: tt("tab.edit")
+								})
+							]
 						}),
 						/* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
 							className: skill_panel_module_css_default.body,
-							children: tab === "list" ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)(ListTab, {
+							children: tab === "edit" && editing !== void 0 ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)(EditTab, {
 								api,
-								refreshTick,
-								onCwd: setCwd
-							}) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)(CreateTab, {
+								skill: editing,
+								onDone: closeEdit,
+								onCancel: closeEdit
+							}) : tab === "create" ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)(CreateTab, {
 								api,
 								cwd
+							}) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)(ListTab, {
+								api,
+								refreshTick,
+								onCwd: setCwd,
+								onEdit: openEdit
 							})
 						})
 					]
@@ -43980,10 +44557,12 @@ window.__ModuleLoader__.load({
 			if (nested !== null) return nested;
 			for (const child of root.children) if (child.tagName === "BUTTON") return child;
 		}
-		/** Build the entry row (a detached button; insert once the shell is up). */
+		/** Build the entry row (detached; inserted once the shell is up). */
 		function createEntry$1(options) {
-			const entry = document.createElement("button");
-			entry.type = "button";
+			const actions = options.actions ?? [];
+			const composite = actions.length > 0;
+			const entry = document.createElement(composite ? "div" : "button");
+			if (!composite) entry.type = "button";
 			entry.setAttribute(options.rowAttribute, "");
 			if (options.plugin !== void 0) {
 				entry.setAttribute("data-dsh-plugin", options.plugin);
@@ -43995,17 +44574,57 @@ window.__ModuleLoader__.load({
 			const iconSpan = document.createElement("span");
 			iconSpan.className = options.css["entryIcon"] ?? "";
 			iconSpan.innerHTML = options.icon;
-			entry.append(iconSpan, labelSpan);
+			const main = composite ? document.createElement("button") : entry;
+			if (composite) {
+				main.type = "button";
+				main.className = options.css["entryMain"] ?? "";
+				main.append(iconSpan, labelSpan);
+				entry.append(main);
+			} else entry.append(iconSpan, labelSpan);
+			const actionButtons = [];
+			for (const action of actions) {
+				const button = document.createElement("button");
+				button.type = "button";
+				button.className = options.css["entryAction"] ?? "";
+				button.setAttribute("data-dsh-entry-action", action.id);
+				button.innerHTML = action.icon;
+				button.addEventListener("click", () => {
+					action.onClick(button);
+				});
+				entry.append(button);
+				actionButtons.push({
+					action,
+					button
+				});
+			}
+			let open = false;
+			const applyActions = () => {
+				for (const { action, button } of actionButtons) {
+					button.innerHTML = open || action.inactiveIcon === void 0 ? action.icon : action.inactiveIcon;
+					const text = action.label(open);
+					button.setAttribute("aria-label", text);
+					button.setAttribute("title", text);
+					if (action.inactiveIcon !== void 0) button.setAttribute("aria-expanded", String(open));
+				}
+			};
 			const applyLabel = () => {
-				entry.setAttribute("aria-label", options.label());
-				if (options.tooltip !== void 0) entry.setAttribute("title", options.tooltip());
+				main.setAttribute("aria-label", options.label());
+				if (options.tooltip !== void 0) main.setAttribute("title", options.tooltip());
 				labelSpan.textContent = options.label();
+				applyActions();
 			};
 			applyLabel();
-			entry.addEventListener("click", options.onToggle);
+			main.addEventListener("click", options.onToggle);
+			if (composite) entry.addEventListener("click", (event) => {
+				if (event.target === entry) options.onToggle();
+			});
 			return {
 				entry,
-				applyLabel
+				applyLabel,
+				setOpen: (next) => {
+					open = next;
+					applyActions();
+				}
 			};
 		}
 		/** Re-insert the entry after the New Session row (before the browser region). */
@@ -44029,7 +44648,7 @@ window.__ModuleLoader__.load({
 		*/
 		function mountSidebarEntry$3(options) {
 			if (typeof document !== "undefined" && document.querySelector(options.rowSelector) !== null) return () => {};
-			const { entry, applyLabel } = createEntry$1(options);
+			const { entry, applyLabel, setOpen } = createEntry$1(options);
 			let root;
 			let placed = false;
 			let unsubscribeRefresh;
@@ -44069,8 +44688,10 @@ window.__ModuleLoader__.load({
 			});
 			const unsubscribeActive = options.active === void 0 ? void 0 : (() => {
 				const syncActive = () => {
-					if (options.active.isOpen()) entry.dataset.active = "true";
+					const open = options.active.isOpen();
+					if (open) entry.dataset.active = "true";
 					else delete entry.dataset.active;
+					setOpen(open);
 				};
 				const unsubscribe = options.active.subscribe(syncActive);
 				syncActive();
@@ -44138,7 +44759,7 @@ window.__ModuleLoader__.load({
 		/** The building package's version, when the bundle carries it. */
 		function bakedVersion$2() {
 			try {
-				return "0.3.23";
+				return "0.3.24";
 			} catch {
 				return;
 			}
@@ -47534,7 +48155,7 @@ window.__ModuleLoader__.load({
 		/** The building package's version, when the bundle carries it. */
 		function bakedVersion$1() {
 			try {
-				return "0.3.23";
+				return "0.3.24";
 			} catch {
 				return;
 			}
@@ -47902,10 +48523,6 @@ window.__ModuleLoader__.load({
 			"usage.config.title": "设置",
 			"usage.config.enabled": "启用插件",
 			"usage.config.pollIntervalSec": "轮询间隔（秒）",
-			"usage.config.bubbleMode": "宠物气泡",
-			"usage.config.bubbleMode.always": "常驻显示",
-			"usage.config.bubbleMode.change": "仅变化时",
-			"usage.config.bubbleMode.off": "关闭",
 			"usage.bank.title": "鲸元券",
 			"usage.bank.hint": "官方 API 每消耗 100 万 tokens 铸造 1 鲸元；保存或分享这张票券。",
 			"usage.bank.noUsage": "暂无 DeepSeek 官方用量数据（统计自插件启用起）",
@@ -47918,13 +48535,13 @@ window.__ModuleLoader__.load({
 			"usage.bank.drawError": "票券生成失败：{error}",
 			"usage.sidebar.entry.label": "用量",
 			"usage.sidebar.entry.tooltip": "用量面板：套餐配额与余额",
-			"usage.sidebar.title": "用量",
 			"usage.sidebar.toggle.collapse": "折叠",
 			"usage.sidebar.toggle.expand": "展开",
 			"usage.sidebar.empty": "没有已配置的套餐或余额数据。",
 			"usage.sidebar.error": "加载失败：{error}",
 			"usage.sidebar.loading": "正在加载用量数据…",
-			"usage.sidebar.balanceLeft": "剩余 {balance}"
+			"usage.sidebar.balanceLeft": "剩余 {balance}",
+			"usage.sidebar.todayUsage": "今日 {tokens} tokens"
 		};
 		/** English mirror; every zh key present. */
 		const en$4 = {
@@ -47967,10 +48584,6 @@ window.__ModuleLoader__.load({
 			"usage.config.title": "Settings",
 			"usage.config.enabled": "Enable plugin",
 			"usage.config.pollIntervalSec": "Poll interval (seconds)",
-			"usage.config.bubbleMode": "Pet bubble",
-			"usage.config.bubbleMode.always": "Always visible",
-			"usage.config.bubbleMode.change": "On change",
-			"usage.config.bubbleMode.off": "Off",
 			"usage.bank.title": "Whale-yuan voucher",
 			"usage.bank.hint": "Every 1,000,000 tokens spent on the official API mint one whale yuan; save or share the note.",
 			"usage.bank.noUsage": "No official DeepSeek usage yet (counting starts when the plugin is enabled)",
@@ -47983,13 +48596,13 @@ window.__ModuleLoader__.load({
 			"usage.bank.drawError": "Failed to render the voucher: {error}",
 			"usage.sidebar.entry.label": "Usage",
 			"usage.sidebar.entry.tooltip": "Usage panel: plan quotas and balances",
-			"usage.sidebar.title": "Usage",
 			"usage.sidebar.toggle.collapse": "Collapse",
 			"usage.sidebar.toggle.expand": "Expand",
 			"usage.sidebar.empty": "No plan or balance data configured.",
 			"usage.sidebar.error": "Loading failed: {error}",
 			"usage.sidebar.loading": "Loading usage data…",
-			"usage.sidebar.balanceLeft": "{balance} left"
+			"usage.sidebar.balanceLeft": "{balance} left",
+			"usage.sidebar.todayUsage": "{tokens} tokens today"
 		};
 		/**
 		* Active dictionary, picked by the document language at call time. The
@@ -48007,7 +48620,7 @@ window.__ModuleLoader__.load({
 		}
 		//#endregion
 		//#region \0dsh-css:packages/dsh-usage/src/client/usage.module.css.mjs
-		const css$4 = ".cvtkAW_section{color:inherit;flex-direction:column;gap:16px;display:flex}.cvtkAW_header{justify-content:space-between;align-items:center;gap:12px;display:flex}.cvtkAW_currentProvider{opacity:.75;font-size:13px}.cvtkAW_refreshBtn{appearance:none;color:inherit;font:inherit;cursor:pointer;opacity:.85;background:0 0;border:1px solid;border-radius:8px;padding:4px 12px;font-size:12px;transition:opacity .12s,background-color .12s}.cvtkAW_refreshBtn:hover:not(:disabled){opacity:1;background:color-mix(in srgb, currentColor 8%, transparent)}.cvtkAW_refreshBtn:disabled{cursor:default;opacity:.5}.cvtkAW_refreshBtn:focus-visible{box-shadow:0 0 0 2px color-mix(in srgb, currentColor 45%, transparent);outline:none}.cvtkAW_tabs{border-bottom:1px solid color-mix(in srgb, currentColor 14%, transparent);gap:4px;display:flex}.cvtkAW_tab{appearance:none;color:inherit;font:inherit;cursor:pointer;opacity:.65;background:0 0;border:none;border-bottom:2px solid #0000;margin-bottom:-1px;padding:6px 14px;font-size:13px}.cvtkAW_tab:hover{opacity:.9}.cvtkAW_tab:focus-visible{box-shadow:0 0 0 2px color-mix(in srgb, currentColor 45%, transparent);outline:none}.cvtkAW_tabActive{opacity:1;border-bottom-color:currentColor;font-weight:600}.cvtkAW_card{border:1px solid color-mix(in srgb, currentColor 14%, transparent);border-radius:12px;flex-direction:column;gap:10px;padding:14px 16px;display:flex}.cvtkAW_cardTitle{letter-spacing:.04em;text-transform:uppercase;opacity:.6;font-size:12px;font-weight:600}.cvtkAW_statRow{flex-wrap:wrap;gap:18px;display:flex}.cvtkAW_stat{flex-direction:column;gap:2px;display:flex}.cvtkAW_statValue{font-variant-numeric:tabular-nums;font-size:18px;font-weight:600}.cvtkAW_statLabel{opacity:.6;font-size:11px}.cvtkAW_providerRow{border-top:1px solid color-mix(in srgb, currentColor 8%, transparent);justify-content:space-between;align-items:center;gap:12px;padding:6px 0;font-size:13px;display:flex}.cvtkAW_providerRow:first-of-type{border-top:none}.cvtkAW_providerName{align-items:center;gap:8px;min-width:0;display:flex}.cvtkAW_providerTokens{font-variant-numeric:tabular-nums;opacity:.75;white-space:nowrap}.cvtkAW_providerBalance{font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}.cvtkAW_currentBadge{border:1px solid color-mix(in srgb, currentColor 35%, transparent);opacity:.8;border-radius:999px;flex:none;padding:1px 7px;font-size:10px;font-weight:600}.cvtkAW_chart{flex-direction:column;gap:12px;display:flex}.cvtkAW_chartProvider{flex-direction:column;gap:4px;display:flex}.cvtkAW_chartHead{justify-content:space-between;align-items:baseline;gap:10px;font-size:13px;display:flex}.cvtkAW_chartTokens{font-variant-numeric:tabular-nums;opacity:.65;white-space:nowrap;font-size:11px}.cvtkAW_chartBar{background:color-mix(in srgb, currentColor 8%, transparent);border-radius:999px;height:8px;display:block;overflow:hidden}.cvtkAW_chartFill{background:color-mix(in srgb, currentColor 55%, transparent);border-radius:999px;height:100%;transition:width .3s;display:block}.cvtkAW_chartModel{opacity:.8;grid-template-columns:minmax(80px,180px) 1fr auto;align-items:center;gap:8px;padding-left:14px;font-size:11px;display:grid}.cvtkAW_chartModelName{text-overflow:ellipsis;white-space:nowrap;opacity:.8;overflow:hidden}.cvtkAW_chartModelBar{background:color-mix(in srgb, currentColor 6%, transparent);border-radius:999px;height:4px;display:block;overflow:hidden}.cvtkAW_chartModelFill{background:color-mix(in srgb, currentColor 35%, transparent);border-radius:999px;height:100%;transition:width .3s;display:block}.cvtkAW_trendAxis{opacity:.5;font-variant-numeric:tabular-nums;justify-content:space-between;font-size:10px;display:flex}.cvtkAW_muted{opacity:.6;font-size:12px}.cvtkAW_voucherPreview canvas{border-radius:8px;width:100%;height:auto;display:block}.cvtkAW_buttonRow{gap:8px;display:flex}.cvtkAW_errorLine{opacity:.75;font-size:12px}.cvtkAW_planCard{flex-direction:column;gap:8px;display:flex}.cvtkAW_planHead{justify-content:space-between;align-items:baseline;gap:10px;display:flex}.cvtkAW_planName{font-size:14px;font-weight:600}.cvtkAW_windowRow{flex-direction:column;gap:4px;display:flex}.cvtkAW_windowLabel{opacity:.8;font-variant-numeric:tabular-nums;justify-content:space-between;font-size:12px;display:flex}.cvtkAW_bar{background:color-mix(in srgb, currentColor 10%, transparent);border-radius:999px;height:6px;overflow:hidden}.cvtkAW_barFill{background:color-mix(in srgb, currentColor 55%, transparent);border-radius:999px;height:100%;transition:width .3s}.cvtkAW_barWarn{background:#d97706}.cvtkAW_barLow{background:#dc2626}.cvtkAW_resetLine{opacity:.55;font-variant-numeric:tabular-nums;font-size:11px}.cvtkAW_settingsGrid{flex-wrap:wrap;align-items:center;gap:16px;display:flex}.cvtkAW_settingItem{align-items:center;gap:8px;font-size:13px;display:flex}.cvtkAW_settingItem input[type=checkbox]{accent-color:currentColor}.cvtkAW_settingItem input[type=number]{border:1px solid color-mix(in srgb, currentColor 25%, transparent);width:90px;color:inherit;font:inherit;background:0 0;border-radius:6px;padding:3px 8px;font-size:13px}.cvtkAW_settingItem select{border:1px solid color-mix(in srgb, currentColor 25%, transparent);color:inherit;font:inherit;background:0 0;border-radius:6px;padding:3px 8px;font-size:13px}.cvtkAW_settingItem input:focus-visible,.cvtkAW_settingItem select:focus-visible{box-shadow:0 0 0 2px color-mix(in srgb, currentColor 45%, transparent);outline:none}.cvtkAW_entry{box-sizing:border-box;width:100%;height:36px;color:var(--dsw-alias-label-secondary);cursor:pointer;white-space:nowrap;background:0 0;border:none;border-radius:8px;align-items:center;gap:8px;padding:0 10px;font-size:13px;display:flex}.cvtkAW_entry:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.cvtkAW_entryIcon{flex:none;justify-content:center;align-items:center;width:24px;height:24px;display:inline-flex}.cvtkAW_entryIcon svg{width:18px;height:18px;display:block}.cvtkAW_entryLabel{text-overflow:ellipsis;overflow:hidden}[data-dsh-frame][data-sidebar-collapsed] .cvtkAW_entry,[data-sidebar-collapsed] .cvtkAW_entry{border-radius:50%;justify-content:center;width:36px;height:36px;margin:0 auto 12px;padding:0}[data-dsh-frame][data-sidebar-collapsed] .cvtkAW_entryLabel,[data-sidebar-collapsed] .cvtkAW_entryLabel{display:none}.cvtkAW_sidebarPanel{border:1px solid color-mix(in srgb, currentColor 14%, transparent);color:inherit;background:color-mix(in srgb, currentColor 4%, transparent);border-radius:10px;flex-direction:column;gap:8px;margin:0 4px 12px;padding:10px 10px 12px;display:flex}.cvtkAW_sidebarPanelHead{opacity:.85;justify-content:space-between;align-items:center;gap:8px;font-size:12px;font-weight:600;display:flex}.cvtkAW_sidebarToggle{appearance:none;color:inherit;cursor:pointer;font:inherit;opacity:.7;background:0 0;border:none;padding:0 4px;font-size:12px}.cvtkAW_sidebarToggle:hover{opacity:1}.cvtkAW_sidebarProvider{flex-direction:column;gap:4px;display:flex}.cvtkAW_sidebarProviderHead{justify-content:space-between;align-items:baseline;gap:8px;font-size:12px;display:flex}.cvtkAW_sidebarProviderName{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.cvtkAW_sidebarBalance{opacity:.75;flex:none}.cvtkAW_sidebarWindowRow{opacity:.85;align-items:center;gap:6px;font-size:11px;display:flex}.cvtkAW_sidebarBar{background:color-mix(in srgb, currentColor 14%, transparent);border-radius:2px;flex:1;height:4px;overflow:hidden}.cvtkAW_sidebarBarFill{background:currentColor;border-radius:2px;height:100%;display:block}.cvtkAW_sidebarMuted{opacity:.6;font-size:11px}";
+		const css$4 = ".cvtkAW_section{color:inherit;flex-direction:column;gap:16px;display:flex}.cvtkAW_header{justify-content:space-between;align-items:center;gap:12px;display:flex}.cvtkAW_currentProvider{opacity:.75;font-size:13px}.cvtkAW_refreshBtn{appearance:none;color:inherit;font:inherit;cursor:pointer;opacity:.85;background:0 0;border:1px solid;border-radius:8px;padding:4px 12px;font-size:12px;transition:opacity .12s,background-color .12s}.cvtkAW_refreshBtn:hover:not(:disabled){opacity:1;background:color-mix(in srgb, currentColor 8%, transparent)}.cvtkAW_refreshBtn:disabled{cursor:default;opacity:.5}.cvtkAW_refreshBtn:focus-visible{box-shadow:0 0 0 2px color-mix(in srgb, currentColor 45%, transparent);outline:none}.cvtkAW_tabs{border-bottom:1px solid color-mix(in srgb, currentColor 14%, transparent);gap:4px;display:flex}.cvtkAW_tab{appearance:none;color:inherit;font:inherit;cursor:pointer;opacity:.65;background:0 0;border:none;border-bottom:2px solid #0000;margin-bottom:-1px;padding:6px 14px;font-size:13px}.cvtkAW_tab:hover{opacity:.9}.cvtkAW_tab:focus-visible{box-shadow:0 0 0 2px color-mix(in srgb, currentColor 45%, transparent);outline:none}.cvtkAW_tabActive{opacity:1;border-bottom-color:currentColor;font-weight:600}.cvtkAW_card{border:1px solid color-mix(in srgb, currentColor 14%, transparent);border-radius:12px;flex-direction:column;gap:10px;padding:14px 16px;display:flex}.cvtkAW_cardTitle{letter-spacing:.04em;text-transform:uppercase;opacity:.6;font-size:12px;font-weight:600}.cvtkAW_statRow{flex-wrap:wrap;gap:18px;display:flex}.cvtkAW_stat{flex-direction:column;gap:2px;display:flex}.cvtkAW_statValue{font-variant-numeric:tabular-nums;font-size:18px;font-weight:600}.cvtkAW_statLabel{opacity:.6;font-size:11px}.cvtkAW_providerRow{border-top:1px solid color-mix(in srgb, currentColor 8%, transparent);justify-content:space-between;align-items:center;gap:12px;padding:6px 0;font-size:13px;display:flex}.cvtkAW_providerRow:first-of-type{border-top:none}.cvtkAW_providerName{align-items:center;gap:8px;min-width:0;display:flex}.cvtkAW_providerTokens{font-variant-numeric:tabular-nums;opacity:.75;white-space:nowrap}.cvtkAW_providerBalance{font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}.cvtkAW_currentBadge{border:1px solid color-mix(in srgb, currentColor 35%, transparent);opacity:.8;border-radius:999px;flex:none;padding:1px 7px;font-size:10px;font-weight:600}.cvtkAW_chart{flex-direction:column;gap:12px;display:flex}.cvtkAW_chartProvider{flex-direction:column;gap:4px;display:flex}.cvtkAW_chartHead{justify-content:space-between;align-items:baseline;gap:10px;font-size:13px;display:flex}.cvtkAW_chartTokens{font-variant-numeric:tabular-nums;opacity:.65;white-space:nowrap;font-size:11px}.cvtkAW_chartBar{background:color-mix(in srgb, currentColor 8%, transparent);border-radius:999px;height:8px;display:block;overflow:hidden}.cvtkAW_chartFill{background:color-mix(in srgb, currentColor 55%, transparent);border-radius:999px;height:100%;transition:width .3s;display:block}.cvtkAW_chartModel{opacity:.8;grid-template-columns:minmax(80px,180px) 1fr auto;align-items:center;gap:8px;padding-left:14px;font-size:11px;display:grid}.cvtkAW_chartModelName{text-overflow:ellipsis;white-space:nowrap;opacity:.8;overflow:hidden}.cvtkAW_chartModelBar{background:color-mix(in srgb, currentColor 6%, transparent);border-radius:999px;height:4px;display:block;overflow:hidden}.cvtkAW_chartModelFill{background:color-mix(in srgb, currentColor 35%, transparent);border-radius:999px;height:100%;transition:width .3s;display:block}.cvtkAW_trendAxis{opacity:.5;font-variant-numeric:tabular-nums;justify-content:space-between;font-size:10px;display:flex}.cvtkAW_muted{opacity:.6;font-size:12px}.cvtkAW_voucherPreview canvas{border-radius:8px;width:100%;height:auto;display:block}.cvtkAW_buttonRow{gap:8px;display:flex}.cvtkAW_errorLine{opacity:.75;font-size:12px}.cvtkAW_planCard{flex-direction:column;gap:8px;display:flex}.cvtkAW_planHead{justify-content:space-between;align-items:baseline;gap:10px;display:flex}.cvtkAW_planName{font-size:14px;font-weight:600}.cvtkAW_windowRow{flex-direction:column;gap:4px;display:flex}.cvtkAW_windowLabel{opacity:.8;font-variant-numeric:tabular-nums;justify-content:space-between;font-size:12px;display:flex}.cvtkAW_bar{background:color-mix(in srgb, currentColor 10%, transparent);border-radius:999px;height:6px;overflow:hidden}.cvtkAW_barFill{background:color-mix(in srgb, currentColor 55%, transparent);border-radius:999px;height:100%;transition:width .3s}.cvtkAW_barWarn{background:#d97706}.cvtkAW_barLow{background:#dc2626}.cvtkAW_resetLine{opacity:.55;font-variant-numeric:tabular-nums;font-size:11px}.cvtkAW_settingsGrid{flex-wrap:wrap;align-items:center;gap:16px;display:flex}.cvtkAW_settingItem{align-items:center;gap:8px;font-size:13px;display:flex}.cvtkAW_settingItem input[type=checkbox]{accent-color:currentColor}.cvtkAW_settingItem input[type=number]{border:1px solid color-mix(in srgb, currentColor 25%, transparent);width:90px;color:inherit;font:inherit;background:0 0;border-radius:6px;padding:3px 8px;font-size:13px}.cvtkAW_settingItem select{border:1px solid color-mix(in srgb, currentColor 25%, transparent);color:inherit;font:inherit;background:0 0;border-radius:6px;padding:3px 8px;font-size:13px}.cvtkAW_settingItem input:focus-visible,.cvtkAW_settingItem select:focus-visible{box-shadow:0 0 0 2px color-mix(in srgb, currentColor 45%, transparent);outline:none}.cvtkAW_entry{box-sizing:border-box;width:100%;height:36px;color:var(--dsw-alias-label-secondary);cursor:pointer;white-space:nowrap;background:0 0;border:none;border-radius:8px;align-items:center;gap:8px;padding:0 10px;font-size:13px;display:flex}.cvtkAW_entry:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.cvtkAW_entryIcon{flex:none;justify-content:center;align-items:center;width:24px;height:24px;display:inline-flex}.cvtkAW_entryIcon svg{width:18px;height:18px;display:block}.cvtkAW_entryLabel{text-overflow:ellipsis;overflow:hidden}.cvtkAW_entryMain{appearance:none;min-width:0;height:100%;color:inherit;font:inherit;text-align:left;cursor:pointer;background:0 0;border:none;flex:1;align-items:center;gap:8px;padding:0;display:flex}.cvtkAW_entryAction{appearance:none;width:22px;height:22px;color:inherit;cursor:pointer;opacity:.55;background:0 0;border:none;border-radius:6px;flex:none;justify-content:center;align-items:center;padding:0;transition:opacity .12s,background-color .12s;display:inline-flex}.cvtkAW_entry:hover .cvtkAW_entryAction{opacity:.8}.cvtkAW_entryAction:hover{opacity:1;background:color-mix(in srgb, currentColor 10%, transparent)}.cvtkAW_entryAction:focus-visible,.cvtkAW_entryMain:focus-visible{box-shadow:0 0 0 2px color-mix(in srgb, currentColor 45%, transparent);outline:none}.cvtkAW_entryAction:disabled{cursor:default;opacity:.4}.cvtkAW_entryAction svg{width:14px;height:14px;display:block}.cvtkAW_entryAction:disabled svg{animation:.9s linear infinite cvtkAW_usageEntrySpin}@keyframes cvtkAW_usageEntrySpin{to{transform:rotate(360deg)}}[data-dsh-frame][data-sidebar-collapsed] .cvtkAW_entry,[data-sidebar-collapsed] .cvtkAW_entry{border-radius:50%;justify-content:center;width:36px;height:36px;margin:0 auto 12px;padding:0}[data-dsh-frame][data-sidebar-collapsed] .cvtkAW_entryMain,[data-sidebar-collapsed] .cvtkAW_entryMain{flex:none;justify-content:center;width:100%}[data-dsh-frame][data-sidebar-collapsed] .cvtkAW_entryAction,[data-sidebar-collapsed] .cvtkAW_entryAction{display:none}[data-dsh-frame][data-sidebar-collapsed] .cvtkAW_sidebarSummary,[data-sidebar-collapsed] .cvtkAW_sidebarSummary{display:none}[data-dsh-frame][data-sidebar-collapsed] .cvtkAW_entryLabel,[data-sidebar-collapsed] .cvtkAW_entryLabel{display:none}.cvtkAW_sidebarSummary{color:inherit;opacity:.75;white-space:nowrap;align-items:baseline;gap:6px;margin:0 4px 12px;padding:0 10px;font-size:11px;display:flex;overflow:hidden}.cvtkAW_sidebarSummaryName{text-overflow:ellipsis;flex:none;max-width:40%;font-weight:600;overflow:hidden}.cvtkAW_sidebarSummaryFacts{text-overflow:ellipsis;font-variant-numeric:tabular-nums;overflow:hidden}.cvtkAW_sidebarPanel{border:1px solid color-mix(in srgb, currentColor 14%, transparent);color:inherit;background:color-mix(in srgb, currentColor 4%, transparent);border-radius:10px;flex-direction:column;gap:8px;margin:0 4px 12px;padding:10px 10px 12px;display:flex}.cvtkAW_sidebarProvider{flex-direction:column;gap:4px;display:flex}.cvtkAW_sidebarProviderHead{justify-content:space-between;align-items:baseline;gap:8px;font-size:12px;display:flex}.cvtkAW_sidebarProviderName{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.cvtkAW_sidebarBalance{opacity:.75;flex:none}.cvtkAW_sidebarWindowRow{opacity:.85;align-items:center;gap:6px;font-size:11px;display:flex}.cvtkAW_sidebarBar{background:color-mix(in srgb, currentColor 14%, transparent);border-radius:2px;flex:1;height:4px;overflow:hidden}.cvtkAW_sidebarBarFill{background:currentColor;border-radius:2px;height:100%;display:block}.cvtkAW_sidebarMuted{opacity:.6;font-size:11px}";
 		const tagId$4 = "@linxin666/dsh-web-all/packages/dsh-usage/src/client/usage.module.css";
 		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId$4) + "]") === null) {
 			const tag = document.createElement("style");
@@ -48037,8 +48650,10 @@ window.__ModuleLoader__.load({
 			"currentBadge": "cvtkAW_currentBadge",
 			"currentProvider": "cvtkAW_currentProvider",
 			"entry": "cvtkAW_entry",
+			"entryAction": "cvtkAW_entryAction",
 			"entryIcon": "cvtkAW_entryIcon",
 			"entryLabel": "cvtkAW_entryLabel",
+			"entryMain": "cvtkAW_entryMain",
 			"errorLine": "cvtkAW_errorLine",
 			"header": "cvtkAW_header",
 			"muted": "cvtkAW_muted",
@@ -48059,11 +48674,12 @@ window.__ModuleLoader__.load({
 			"sidebarBarFill": "cvtkAW_sidebarBarFill",
 			"sidebarMuted": "cvtkAW_sidebarMuted",
 			"sidebarPanel": "cvtkAW_sidebarPanel",
-			"sidebarPanelHead": "cvtkAW_sidebarPanelHead",
 			"sidebarProvider": "cvtkAW_sidebarProvider",
 			"sidebarProviderHead": "cvtkAW_sidebarProviderHead",
 			"sidebarProviderName": "cvtkAW_sidebarProviderName",
-			"sidebarToggle": "cvtkAW_sidebarToggle",
+			"sidebarSummary": "cvtkAW_sidebarSummary",
+			"sidebarSummaryFacts": "cvtkAW_sidebarSummaryFacts",
+			"sidebarSummaryName": "cvtkAW_sidebarSummaryName",
 			"sidebarWindowRow": "cvtkAW_sidebarWindowRow",
 			"stat": "cvtkAW_stat",
 			"statLabel": "cvtkAW_statLabel",
@@ -48073,6 +48689,7 @@ window.__ModuleLoader__.load({
 			"tabActive": "cvtkAW_tabActive",
 			"tabs": "cvtkAW_tabs",
 			"trendAxis": "cvtkAW_trendAxis",
+			"usageEntrySpin": "cvtkAW_usageEntrySpin",
 			"voucherPreview": "cvtkAW_voucherPreview",
 			"windowLabel": "cvtkAW_windowLabel",
 			"windowRow": "cvtkAW_windowRow"
@@ -48194,10 +48811,12 @@ window.__ModuleLoader__.load({
 			if (nested !== null) return nested;
 			for (const child of root.children) if (child.tagName === "BUTTON") return child;
 		}
-		/** Build the entry row (a detached button; insert once the shell is up). */
+		/** Build the entry row (detached; inserted once the shell is up). */
 		function createEntry(options) {
-			const entry = document.createElement("button");
-			entry.type = "button";
+			const actions = options.actions ?? [];
+			const composite = actions.length > 0;
+			const entry = document.createElement(composite ? "div" : "button");
+			if (!composite) entry.type = "button";
 			entry.setAttribute(options.rowAttribute, "");
 			if (options.plugin !== void 0) {
 				entry.setAttribute("data-dsh-plugin", options.plugin);
@@ -48209,17 +48828,57 @@ window.__ModuleLoader__.load({
 			const iconSpan = document.createElement("span");
 			iconSpan.className = options.css["entryIcon"] ?? "";
 			iconSpan.innerHTML = options.icon;
-			entry.append(iconSpan, labelSpan);
+			const main = composite ? document.createElement("button") : entry;
+			if (composite) {
+				main.type = "button";
+				main.className = options.css["entryMain"] ?? "";
+				main.append(iconSpan, labelSpan);
+				entry.append(main);
+			} else entry.append(iconSpan, labelSpan);
+			const actionButtons = [];
+			for (const action of actions) {
+				const button = document.createElement("button");
+				button.type = "button";
+				button.className = options.css["entryAction"] ?? "";
+				button.setAttribute("data-dsh-entry-action", action.id);
+				button.innerHTML = action.icon;
+				button.addEventListener("click", () => {
+					action.onClick(button);
+				});
+				entry.append(button);
+				actionButtons.push({
+					action,
+					button
+				});
+			}
+			let open = false;
+			const applyActions = () => {
+				for (const { action, button } of actionButtons) {
+					button.innerHTML = open || action.inactiveIcon === void 0 ? action.icon : action.inactiveIcon;
+					const text = action.label(open);
+					button.setAttribute("aria-label", text);
+					button.setAttribute("title", text);
+					if (action.inactiveIcon !== void 0) button.setAttribute("aria-expanded", String(open));
+				}
+			};
 			const applyLabel = () => {
-				entry.setAttribute("aria-label", options.label());
-				if (options.tooltip !== void 0) entry.setAttribute("title", options.tooltip());
+				main.setAttribute("aria-label", options.label());
+				if (options.tooltip !== void 0) main.setAttribute("title", options.tooltip());
 				labelSpan.textContent = options.label();
+				applyActions();
 			};
 			applyLabel();
-			entry.addEventListener("click", options.onToggle);
+			main.addEventListener("click", options.onToggle);
+			if (composite) entry.addEventListener("click", (event) => {
+				if (event.target === entry) options.onToggle();
+			});
 			return {
 				entry,
-				applyLabel
+				applyLabel,
+				setOpen: (next) => {
+					open = next;
+					applyActions();
+				}
 			};
 		}
 		/** Re-insert the entry after the New Session row (before the browser region). */
@@ -48243,7 +48902,7 @@ window.__ModuleLoader__.load({
 		*/
 		function mountSidebarEntry$1(options) {
 			if (typeof document !== "undefined" && document.querySelector(options.rowSelector) !== null) return () => {};
-			const { entry, applyLabel } = createEntry(options);
+			const { entry, applyLabel, setOpen } = createEntry(options);
 			let root;
 			let placed = false;
 			let unsubscribeRefresh;
@@ -48283,8 +48942,10 @@ window.__ModuleLoader__.load({
 			});
 			const unsubscribeActive = options.active === void 0 ? void 0 : (() => {
 				const syncActive = () => {
-					if (options.active.isOpen()) entry.dataset.active = "true";
+					const open = options.active.isOpen();
+					if (open) entry.dataset.active = "true";
 					else delete entry.dataset.active;
+					setOpen(open);
 				};
 				const unsubscribe = options.active.subscribe(syncActive);
 				syncActive();
@@ -48305,22 +48966,54 @@ window.__ModuleLoader__.load({
 		* Sidebar entry injection for the usage panel (issue #1592) — wiring over the
 		* shared core. Unlike the panel-takeover family (task board / SSH / skill
 		* center) this row does not participate in the family block, so it is placed
-		* directly under the New Session row and ordered after those entries.
+		* directly under the New Session row and ordered after those entries. The row
+		* seats the panel's controls as trailing actions: a refresh command and a
+		* collapse chevron mirroring the open state, so the panel below renders only
+		* its content.
 		* @module @linxin666/dsh-usage/client/sidebar-entry
 		*/
 		/** Stable data attribute identifying the injected entry row. */
 		const ENTRY_SELECTOR = "[data-dsh-usage-entry]";
 		/** Inline gauge glyph normalized to the shell's 18px navigation glyph size. */
 		const ICON = "<svg viewBox=\"0 0 16 16\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.3\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M2.5 12.5a7 7 0 0 1 11 -4.3\"/><path d=\"M8 12.5V8.2l2.9-2.1\"/><circle cx=\"8\" cy=\"12.5\" r=\"1\"/></svg>";
+		/** Refresh glyph: a clockwise circular arrow, 14px like the sibling action icons. */
+		const REFRESH_ICON = "<svg viewBox=\"0 0 16 16\" width=\"14\" height=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M13.4 8a5.4 5.4 0 1 1-1.58-3.82\"/><path d=\"M13.4 2.6v2.7h-2.7\"/></svg>";
+		/** Disclosure chevrons: down while expanded, right while collapsed. */
+		const CHEVRON_OPEN_ICON = "<svg viewBox=\"0 0 16 16\" width=\"14\" height=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m4 6 4 4 4-4\"/></svg>";
+		const CHEVRON_CLOSED_ICON = "<svg viewBox=\"0 0 16 16\" width=\"14\" height=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m6 4 4 4-4 4\"/></svg>";
+		/** Refresh cooldown: one forced probe cycle per click, the icon spins meanwhile. */
+		const REFRESH_COOLDOWN_MS = 3e3;
+		/** Trailing actions seated at the row's right edge. */
+		function entryActions(handlers) {
+			return [{
+				id: "refresh",
+				icon: REFRESH_ICON,
+				label: () => t$2("usage.refresh"),
+				onClick: (button) => {
+					handlers.onRefresh();
+					button.disabled = true;
+					window.setTimeout(() => {
+						button.disabled = false;
+					}, REFRESH_COOLDOWN_MS);
+				}
+			}, {
+				id: "collapse",
+				icon: CHEVRON_OPEN_ICON,
+				inactiveIcon: CHEVRON_CLOSED_ICON,
+				label: (open) => t$2(open ? "usage.sidebar.toggle.collapse" : "usage.sidebar.toggle.expand"),
+				onClick: () => {
+					handlers.onToggle();
+				}
+			}];
+		}
 		/**
 		* Mount the usage sidebar entry.
-		* @param onToggle - toggles the panel below the row.
-		* @param isOpen - reads the panel's expanded state (row highlight).
+		* @param handlers - the panel's toggle/refresh callbacks and open-state face.
 		* @param locale - locale-change source; when given, re-applies the label on a
-		*   Language switch (the plain-DOM row otherwise keeps the mount-time copy).
+		*   language switch (the plain-DOM row otherwise keeps the mount-time copy).
 		* @returns disposer removing the entry and its observers.
 		*/
-		function mountSidebarEntry(onToggle, isOpen, locale) {
+		function mountSidebarEntry(handlers, locale) {
 			return mountSidebarEntry$1({
 				rowAttribute: "data-dsh-usage-entry",
 				rowSelector: ENTRY_SELECTOR,
@@ -48330,7 +49023,8 @@ window.__ModuleLoader__.load({
 				label: () => t$2("usage.sidebar.entry.label"),
 				tooltip: () => t$2("usage.sidebar.entry.tooltip"),
 				refresh: locale === void 0 ? void 0 : { subscribe: (listener) => locale.subscribe(listener) },
-				onToggle,
+				onToggle: handlers.onToggle,
+				actions: entryActions(handlers),
 				position: "after",
 				familySelectors: [
 					"[data-dsh-taskboard-entry]",
@@ -48339,220 +49033,10 @@ window.__ModuleLoader__.load({
 					"[data-dsh-usage-entry]"
 				],
 				active: {
-					subscribe: (listener) => {
-						return () => {};
-					},
-					isOpen
+					subscribe: handlers.subscribeOpen,
+					isOpen: handlers.isOpen
 				}
 			});
-		}
-		//#endregion
-		//#region ../dsh-usage/src/client/UsageSidebarPanel.tsx
-		/**
-		* Sidebar usage panel (issue #1592): a collapsible usage surface in the
-		* sidebar, mounted directly under the family entry block. It reads the same
-		* /api/dsh-usage/overview document the settings section renders — plan
-		* providers show their quota windows, balance-only providers their remaining
-		* amount — and polls only while the panel is expanded and the page visible.
-		* @module @linxin666/dsh-usage/client/UsageSidebarPanel
-		*/
-		/** Poll cadence while the panel is expanded and the page visible. */
-		const PANEL_POLL_MS = 1e4;
-		/** localStorage key holding the collapsed flag ('1' = collapsed). */
-		const COLLAPSED_STORAGE_KEY = "dsh-usage.sidebar.collapsed";
-		/** Bar tone, matching the settings section's thresholds. */
-		function tone(percent) {
-			if (percent >= 90) return usage_module_css_default.barLow;
-			if (percent >= 70) return usage_module_css_default.barWarn;
-			return usage_module_css_default.sidebarBarFill;
-		}
-		/** Read the persisted collapsed flag (absent = expanded). */
-		function readCollapsed() {
-			try {
-				return window.localStorage.getItem(COLLAPSED_STORAGE_KEY) === "1";
-			} catch {
-				return false;
-			}
-		}
-		/** A provider is worth listing when it is configured and carries a fact. */
-		function listable(provider) {
-			return provider.credential !== "none" && (provider.plan !== void 0 || provider.balance !== void 0);
-		}
-		/** One provider row: plan windows when present, otherwise the balance line. */
-		function ProviderBlock(props) {
-			const { provider } = props;
-			const windows = provider.plan?.windows ?? [];
-			if (windows.length > 0) return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-				className: usage_module_css_default.sidebarProvider,
-				"data-dsh-part": "sidebar-provider",
-				children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
-					className: usage_module_css_default.sidebarProviderHead,
-					children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-						className: usage_module_css_default.sidebarProviderName,
-						children: provider.displayName
-					})
-				}), windows.map((window) => /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-					className: usage_module_css_default.sidebarWindowRow,
-					"data-dsh-part": "sidebar-window",
-					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { children: window.name ?? t$2(`usage.plan.windows.${window.key}`) }), window.percent !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-						className: usage_module_css_default.sidebarBar,
-						children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: tone(window.percent),
-							style: { width: `${Math.min(100, Math.max(0, window.percent))}%` }
-						})
-					}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", { children: [window.percent >= 10 ? Math.round(window.percent) : window.percent.toFixed(1), "%"] })] })]
-				}, window.key))]
-			});
-			if (provider.balance !== void 0) return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
-				className: usage_module_css_default.sidebarProvider,
-				"data-dsh-part": "sidebar-provider",
-				children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-					className: usage_module_css_default.sidebarProviderHead,
-					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-						className: usage_module_css_default.sidebarProviderName,
-						children: provider.displayName
-					}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-						className: usage_module_css_default.sidebarBalance,
-						children: t$2("usage.sidebar.balanceLeft", { balance: `${provider.balance.currency} ${provider.balance.totalBalance}` })
-					})]
-				})
-			});
-			return null;
-		}
-		/**
-		* Render the sidebar usage panel.
-		* @param props - store plus the poll/refresh callbacks of the apply body.
-		* @returns the panel body (no wrapper: the entry row owns the placement).
-		*/
-		function UsageSidebarPanel(props) {
-			const { store, poll, refresh } = props;
-			const ui = (0, react.useSyncExternalStore)(store.subscribe, store.getSnapshot);
-			const [collapsed, setCollapsed] = (0, react.useState)(readCollapsed);
-			const [refreshing, setRefreshing] = (0, react.useState)(false);
-			const toggle = () => {
-				setCollapsed((current) => {
-					const next = !current;
-					try {
-						window.localStorage.setItem(COLLAPSED_STORAGE_KEY, next ? "1" : "0");
-					} catch {}
-					return next;
-				});
-			};
-			(0, react.useEffect)(() => {
-				if (collapsed) return void 0;
-				poll();
-				let timer;
-				const start = () => {
-					if (timer === void 0 && document.visibilityState === "visible") timer = window.setInterval(poll, PANEL_POLL_MS);
-				};
-				const onVisibility = () => {
-					if (document.visibilityState === "visible") {
-						poll();
-						start();
-					} else if (timer !== void 0) {
-						window.clearInterval(timer);
-						timer = void 0;
-					}
-				};
-				start();
-				document.addEventListener("visibilitychange", onVisibility);
-				return () => {
-					if (timer !== void 0) window.clearInterval(timer);
-					document.removeEventListener("visibilitychange", onVisibility);
-				};
-			}, [poll, collapsed]);
-			const onRefresh = () => {
-				setRefreshing(true);
-				refresh();
-				window.setTimeout(() => setRefreshing(false), 3e3);
-			};
-			const snapshot = ui.snapshot;
-			const providers = snapshot === null ? [] : snapshot.providers.filter(listable);
-			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-				className: usage_module_css_default.sidebarPanel,
-				"data-dsh-plugin": "usage",
-				"data-dsh-part": "sidebar-panel",
-				children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-					className: usage_module_css_default.sidebarPanelHead,
-					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { children: t$2("usage.sidebar.title") }), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", { children: [!collapsed && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
-						type: "button",
-						className: usage_module_css_default.sidebarToggle,
-						onClick: onRefresh,
-						disabled: refreshing,
-						children: refreshing ? t$2("usage.refreshing") : t$2("usage.refresh")
-					}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
-						type: "button",
-						className: usage_module_css_default.sidebarToggle,
-						"aria-expanded": !collapsed,
-						onClick: toggle,
-						children: collapsed ? t$2("usage.sidebar.toggle.expand") : t$2("usage.sidebar.toggle.collapse")
-					})] })]
-				}), !collapsed && (ui.status === "error" ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-					className: usage_module_css_default.sidebarMuted,
-					children: t$2("usage.sidebar.error", { error: ui.error ?? "" })
-				}) : snapshot === null ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-					className: usage_module_css_default.sidebarMuted,
-					children: t$2("usage.sidebar.loading")
-				}) : providers.length === 0 ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-					className: usage_module_css_default.sidebarMuted,
-					children: t$2("usage.sidebar.empty")
-				}) : providers.map((provider) => /* @__PURE__ */ (0, react_jsx_runtime.jsx)(ProviderBlock, { provider }, provider.provider)))]
-			});
-		}
-		//#endregion
-		//#region ../dsh-usage/src/client/sidebar-panel-mount.tsx
-		/**
-		* Sidebar usage panel mounting (issue #1592).
-		*
-		* The panel is a plain DOM row inserted into the sidebar right below the
-		* usage entry row, carrying its own React root. Placement self-heals with the
-		* same page-wide body-mutation hub the entry row uses; the entry row stays the
-		* anchor, so the sidebar order never depends on this module's timing.
-		* @module @linxin666/dsh-usage/client/sidebar-panel-mount
-		*/
-		/**
-		* Mount the sidebar usage panel below its entry row.
-		* @param props - the store and poll/refresh callbacks of the apply body.
-		* @returns the panel controller.
-		*/
-		function mountUsagePanel(props) {
-			const container = document.createElement("div");
-			container.setAttribute("data-dsh-usage-view", "");
-			const root = (0, react_dom_client.createRoot)(container);
-			root.render((0, react.createElement)(UsageSidebarPanel, props));
-			const listeners = /* @__PURE__ */ new Set();
-			let open = true;
-			const emit = () => {
-				for (const listener of [...listeners]) listener();
-			};
-			/** Keep the panel as the row directly after the usage entry. */
-			const place = () => {
-				const entry = document.querySelector(ENTRY_SELECTOR);
-				if (entry === null || entry.parentElement === null) return;
-				if (container.parentElement !== entry.parentElement || entry.nextElementSibling !== container) entry.parentElement.insertBefore(container, entry.nextElementSibling);
-			};
-			place();
-			const unsubscribeBody = subscribeBodyInvalidations$1(place);
-			return {
-				isOpen: () => open,
-				subscribe: (listener) => {
-					listeners.add(listener);
-					return () => {
-						listeners.delete(listener);
-					};
-				},
-				toggle: () => {
-					open = !open;
-					container.style.display = open ? "" : "none";
-					emit();
-				},
-				dispose: () => {
-					unsubscribeBody();
-					root.unmount();
-					container.remove();
-					listeners.clear();
-				}
-			};
 		}
 		//#endregion
 		//#region ../dsh-usage/src/core/adapters.ts
@@ -49043,6 +49527,31 @@ window.__ModuleLoader__.load({
 				peak: false,
 				boundaryMs: ms + 864e5
 			};
+		}
+		//#endregion
+		//#region ../dsh-usage/src/core/types.ts
+		/** A zeroed totals bucket. */
+		function emptyTotals() {
+			return {
+				inputTokens: 0,
+				outputTokens: 0,
+				cacheReadTokens: 0,
+				cacheWriteTokens: 0,
+				reasoningTokens: 0,
+				calls: 0,
+				cost: 0
+			};
+		}
+		/** Add `right` into `left` in place. */
+		function addTotals(left, right) {
+			left.inputTokens += right.inputTokens;
+			left.outputTokens += right.outputTokens;
+			left.cacheReadTokens += right.cacheReadTokens;
+			left.cacheWriteTokens += right.cacheWriteTokens;
+			left.reasoningTokens += right.reasoningTokens;
+			left.calls += right.calls;
+			left.cost += right.cost;
+			return left;
 		}
 		//#endregion
 		//#region ../dsh-usage/src/core/ledger.ts
@@ -49855,11 +50364,6 @@ window.__ModuleLoader__.load({
 		function SettingsRow(props) {
 			const { settings, snapshot, value } = props;
 			const disabled = snapshot === void 0 || !snapshot.writable;
-			const bubbleMode = typeof value.bubbleMode === "string" && [
-				"always",
-				"change",
-				"off"
-			].includes(value.bubbleMode) ? value.bubbleMode : "always";
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 				className: usage_module_css_default.card,
 				"data-dsh-part": "settings-row",
@@ -49868,59 +50372,286 @@ window.__ModuleLoader__.load({
 					children: t$2("usage.config.title")
 				}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 					className: usage_module_css_default.settingsGrid,
-					children: [
-						/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("label", {
-							className: usage_module_css_default.settingItem,
-							children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("input", {
-								type: "checkbox",
-								checked: value.enabled ?? true,
-								disabled,
-								onChange: (event) => {
-									settings.set("enabled", event.target.checked);
-								}
-							}), t$2("usage.config.enabled")]
-						}),
-						/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("label", {
-							className: usage_module_css_default.settingItem,
-							children: [t$2("usage.config.pollIntervalSec"), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("input", {
-								type: "number",
-								min: 30,
-								max: 3600,
-								value: typeof value.pollIntervalSec === "number" ? value.pollIntervalSec : 60,
-								disabled,
-								onChange: (event) => {
-									const parsed = Number(event.target.value);
-									if (Number.isFinite(parsed) && parsed >= 30 && parsed <= 3600) settings.set("pollIntervalSec", Math.round(parsed));
-								}
-							})]
-						}),
-						/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("label", {
-							className: usage_module_css_default.settingItem,
-							children: [t$2("usage.config.bubbleMode"), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("select", {
-								value: bubbleMode,
-								disabled,
-								onChange: (event) => {
-									settings.set("bubbleMode", event.target.value);
-								},
-								children: [
-									/* @__PURE__ */ (0, react_jsx_runtime.jsx)("option", {
-										value: "always",
-										children: t$2("usage.config.bubbleMode.always")
-									}),
-									/* @__PURE__ */ (0, react_jsx_runtime.jsx)("option", {
-										value: "change",
-										children: t$2("usage.config.bubbleMode.change")
-									}),
-									/* @__PURE__ */ (0, react_jsx_runtime.jsx)("option", {
-										value: "off",
-										children: t$2("usage.config.bubbleMode.off")
-									})
-								]
-							})]
-						})
-					]
+					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("label", {
+						className: usage_module_css_default.settingItem,
+						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("input", {
+							type: "checkbox",
+							checked: value.enabled ?? true,
+							disabled,
+							onChange: (event) => {
+								settings.set("enabled", event.target.checked);
+							}
+						}), t$2("usage.config.enabled")]
+					}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("label", {
+						className: usage_module_css_default.settingItem,
+						children: [t$2("usage.config.pollIntervalSec"), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("input", {
+							type: "number",
+							min: 30,
+							max: 3600,
+							value: typeof value.pollIntervalSec === "number" ? value.pollIntervalSec : 60,
+							disabled,
+							onChange: (event) => {
+								const parsed = Number(event.target.value);
+								if (Number.isFinite(parsed) && parsed >= 30 && parsed <= 3600) settings.set("pollIntervalSec", Math.round(parsed));
+							}
+						})]
+					})]
 				})]
 			});
+		}
+		//#endregion
+		//#region ../dsh-usage/src/client/UsageSidebarPanel.tsx
+		/**
+		* Sidebar usage panel (issue #1592): the usage body seated directly under the
+		* sidebar entry row. The row carries the panel's controls (refresh, collapse
+		* chevron), so this component renders only the content: expanded, plan
+		* providers show their quota windows and balance-only providers their
+		* remaining amount; collapsed, a one-line strip shows the current session
+		* provider's today usage (tokens, calls, and cost when priced) from the same
+		* /api/dsh-usage/overview document the settings section renders. The open
+		* state lives in the mount (persisted to localStorage) and arrives through
+		* the open face; polling runs at 10s expanded, 30s collapsed, and pauses
+		* while the page is hidden.
+		* @module @linxin666/dsh-usage/client/UsageSidebarPanel
+		*/
+		/** Poll cadence while the panel is expanded and the page visible. */
+		const PANEL_POLL_MS = 1e4;
+		/**
+		* Poll cadence of the collapsed strip: the current session's usage should
+		* stay visibly live, but a collapsed surface pays a relaxed cadence instead
+		* of the expanded one.
+		*/
+		const COLLAPSED_POLL_MS = 3e4;
+		/** Bar tone, matching the settings section's thresholds. */
+		function tone(percent) {
+			if (percent >= 90) return usage_module_css_default.barLow;
+			if (percent >= 70) return usage_module_css_default.barWarn;
+			return usage_module_css_default.sidebarBarFill;
+		}
+		/**
+		* The collapsed-strip facts for the current provider: display name plus
+		* today's adapter-family totals (tokens, calls, cost). The host serves them
+		* strip-ready inside `current`; an older host document is derived against
+		* here. Undefined on a day without usage — a strip about nothing is noise.
+		*/
+		function collapsedSummary(snapshot) {
+			const provider = snapshot.current.provider;
+			if (provider === void 0) return void 0;
+			const name = snapshot.current.displayName ?? snapshot.providers.find((entry) => entry.provider === provider)?.displayName ?? provider;
+			if (snapshot.current.today !== void 0) {
+				const totals = snapshot.current.today;
+				return totals.calls > 0 && totalTokens(totals) > 0 ? {
+					name,
+					totals
+				} : void 0;
+			}
+			const family = adapterFor(provider);
+			let merged = emptyTotals();
+			for (const row of snapshot.usage.today.providers) if (family === void 0 ? row.provider === provider : adapterFor(row.provider) === family) merged = addTotals(merged, row.totals);
+			return merged.calls > 0 && totalTokens(merged) > 0 ? {
+				name,
+				totals: merged
+			} : void 0;
+		}
+		/** A provider is worth listing when it is configured and carries a fact. */
+		function listable(provider) {
+			return provider.credential !== "none" && (provider.plan !== void 0 || provider.balance !== void 0);
+		}
+		/** One provider row: plan windows when present, otherwise the balance line. */
+		function ProviderBlock(props) {
+			const { provider } = props;
+			const windows = provider.plan?.windows ?? [];
+			if (windows.length > 0) return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+				className: usage_module_css_default.sidebarProvider,
+				"data-dsh-part": "sidebar-provider",
+				children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+					className: usage_module_css_default.sidebarProviderHead,
+					children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+						className: usage_module_css_default.sidebarProviderName,
+						children: provider.displayName
+					})
+				}), windows.map((window) => /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+					className: usage_module_css_default.sidebarWindowRow,
+					"data-dsh-part": "sidebar-window",
+					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { children: window.name ?? t$2(`usage.plan.windows.${window.key}`) }), window.percent !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+						className: usage_module_css_default.sidebarBar,
+						children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							className: tone(window.percent),
+							style: { width: `${Math.min(100, Math.max(0, window.percent))}%` }
+						})
+					}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", { children: [window.percent >= 10 ? Math.round(window.percent) : window.percent.toFixed(1), "%"] })] })]
+				}, window.key))]
+			});
+			if (provider.balance !== void 0) return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+				className: usage_module_css_default.sidebarProvider,
+				"data-dsh-part": "sidebar-provider",
+				children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+					className: usage_module_css_default.sidebarProviderHead,
+					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+						className: usage_module_css_default.sidebarProviderName,
+						children: provider.displayName
+					}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+						className: usage_module_css_default.sidebarBalance,
+						children: t$2("usage.sidebar.balanceLeft", { balance: `${provider.balance.currency} ${provider.balance.totalBalance}` })
+					})]
+				})
+			});
+			return null;
+		}
+		/**
+		* Render the sidebar usage panel body.
+		* @param props - store, the poll callback, and the mount's open-state face.
+		* @returns the panel content, or null while collapsed.
+		*/
+		function UsageSidebarPanel(props) {
+			const { store, poll, open: openState } = props;
+			const ui = (0, react.useSyncExternalStore)(store.subscribe, store.getSnapshot);
+			const open = (0, react.useSyncExternalStore)(openState.subscribe, openState.isOpen);
+			(0, react.useEffect)(() => {
+				poll();
+				const cadence = open ? PANEL_POLL_MS : COLLAPSED_POLL_MS;
+				let timer;
+				const start = () => {
+					if (timer === void 0 && document.visibilityState === "visible") timer = window.setInterval(poll, cadence);
+				};
+				const onVisibility = () => {
+					if (document.visibilityState === "visible") {
+						poll();
+						start();
+					} else if (timer !== void 0) {
+						window.clearInterval(timer);
+						timer = void 0;
+					}
+				};
+				start();
+				document.addEventListener("visibilitychange", onVisibility);
+				return () => {
+					if (timer !== void 0) window.clearInterval(timer);
+					document.removeEventListener("visibilitychange", onVisibility);
+				};
+			}, [poll, open]);
+			const snapshot = ui.snapshot;
+			if (!open) {
+				const summary = snapshot === null ? void 0 : collapsedSummary(snapshot);
+				if (summary === void 0) return null;
+				return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+					className: usage_module_css_default.sidebarSummary,
+					"data-dsh-plugin": "usage",
+					"data-dsh-part": "sidebar-summary",
+					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+						className: usage_module_css_default.sidebarSummaryName,
+						children: summary.name
+					}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+						className: usage_module_css_default.sidebarSummaryFacts,
+						children: [
+							t$2("usage.sidebar.todayUsage", { tokens: formatTokens(totalTokens(summary.totals)) }),
+							" · ",
+							t$2("usage.calls", { n: summary.totals.calls }),
+							summary.totals.cost > 0 ? ` · ¥${summary.totals.cost.toFixed(2)}` : ""
+						]
+					})]
+				});
+			}
+			const providers = snapshot === null ? [] : snapshot.providers.filter(listable);
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+				className: usage_module_css_default.sidebarPanel,
+				"data-dsh-plugin": "usage",
+				"data-dsh-part": "sidebar-panel",
+				children: ui.status === "error" ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+					className: usage_module_css_default.sidebarMuted,
+					children: t$2("usage.sidebar.error", { error: ui.error ?? "" })
+				}) : snapshot === null ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+					className: usage_module_css_default.sidebarMuted,
+					children: t$2("usage.sidebar.loading")
+				}) : providers.length === 0 ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+					className: usage_module_css_default.sidebarMuted,
+					children: t$2("usage.sidebar.empty")
+				}) : providers.map((provider) => /* @__PURE__ */ (0, react_jsx_runtime.jsx)(ProviderBlock, { provider }, provider.provider))
+			});
+		}
+		//#endregion
+		//#region ../dsh-usage/src/client/sidebar-panel-mount.tsx
+		/**
+		* Sidebar usage panel mounting (issue #1592).
+		*
+		* The panel is a plain DOM row inserted into the sidebar right below the
+		* usage entry row, carrying its own React root. Placement self-heals with the
+		* same page-wide body-mutation hub the entry row uses; the entry row stays the
+		* anchor, so the sidebar order never depends on this module's timing.
+		*
+		* The mount owns the panel's single open state: initialized from localStorage,
+		* flipped by the entry row's toggle controls, and mirrored to the React body
+		* through the subscribe/isOpen face (the same face the entry row's chevron
+		* and highlight read).
+		* @module @linxin666/dsh-usage/client/sidebar-panel-mount
+		*/
+		/** localStorage key holding the collapsed flag ('1' = collapsed). */
+		const COLLAPSED_STORAGE_KEY = "dsh-usage.sidebar.collapsed";
+		/** Read the persisted collapsed flag (absent = expanded). */
+		function readCollapsed() {
+			try {
+				return window.localStorage.getItem(COLLAPSED_STORAGE_KEY) === "1";
+			} catch {
+				return false;
+			}
+		}
+		/** Persist the collapsed flag; storage failures keep the session state. */
+		function writeCollapsed(collapsed) {
+			try {
+				window.localStorage.setItem(COLLAPSED_STORAGE_KEY, collapsed ? "1" : "0");
+			} catch {}
+		}
+		/**
+		* Mount the sidebar usage panel below its entry row.
+		* @param props - the store and poll callback of the apply body.
+		* @returns the panel controller.
+		*/
+		function mountUsagePanel(props) {
+			const container = document.createElement("div");
+			container.setAttribute("data-dsh-usage-view", "");
+			const listeners = /* @__PURE__ */ new Set();
+			let open = !readCollapsed();
+			const emit = () => {
+				for (const listener of [...listeners]) listener();
+			};
+			const openState = {
+				subscribe: (listener) => {
+					listeners.add(listener);
+					return () => {
+						listeners.delete(listener);
+					};
+				},
+				isOpen: () => open
+			};
+			const root = (0, react_dom_client.createRoot)(container);
+			root.render((0, react.createElement)(UsageSidebarPanel, {
+				store: props.store,
+				poll: props.poll,
+				open: openState
+			}));
+			/** Keep the panel as the row directly after the usage entry. */
+			const place = () => {
+				const entry = document.querySelector(ENTRY_SELECTOR);
+				if (entry === null || entry.parentElement === null) return;
+				if (container.parentElement !== entry.parentElement || entry.nextElementSibling !== container) entry.parentElement.insertBefore(container, entry.nextElementSibling);
+			};
+			place();
+			const unsubscribeBody = subscribeBodyInvalidations$1(place);
+			return {
+				isOpen: () => open,
+				subscribe: openState.subscribe,
+				toggle: () => {
+					open = !open;
+					writeCollapsed(!open);
+					emit();
+				},
+				dispose: () => {
+					unsubscribeBody();
+					root.unmount();
+					container.remove();
+					listeners.clear();
+				}
+			};
 		}
 		//#endregion
 		//#region ../dsh-usage/src/client/index.ts
@@ -50004,12 +50735,18 @@ window.__ModuleLoader__.load({
 			});
 			const panel = mountUsagePanel({
 				store,
-				poll,
-				refresh
+				poll
 			});
-			const disposeEntry = mountSidebarEntry(() => {
-				panel.toggle();
-			}, () => panel.isOpen(), ctx.locale);
+			const disposeEntry = mountSidebarEntry({
+				onToggle: () => {
+					panel.toggle();
+				},
+				onRefresh: () => {
+					refresh();
+				},
+				isOpen: () => panel.isOpen(),
+				subscribeOpen: (listener) => panel.subscribe(listener)
+			}, ctx.locale);
 			ctx.effect(() => () => {
 				try {
 					disposeEntry();
@@ -59360,7 +60097,7 @@ window.__ModuleLoader__.load({
 		/** The building package's version, when the bundle carries it. */
 		function bakedVersion() {
 			try {
-				return "0.3.23";
+				return "0.3.24";
 			} catch {
 				return;
 			}

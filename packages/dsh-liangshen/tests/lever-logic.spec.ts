@@ -55,12 +55,34 @@ describe('restoreTarget', () => {
 
   it('never restores the LiangShen preset itself', () => {
     expect(restoreTarget({ ...base, previous: LIANGSHEN_PRESET_ID })).toBe('standard')
-    expect(restoreTarget({ ...base, fallback: LIANGSHEN_PRESET_ID, previous: LIANGSHEN_PRESET_ID })).toBeUndefined()
+    expect(restoreTarget({ ...base, fallback: LIANGSHEN_PRESET_ID, previous: LIANGSHEN_PRESET_ID })).toBe('standard')
+  })
+
+  it('user with a liangshen deployment default restores the first available non-liangshen preset', () => {
+    // Given a deployment whose default preset is LiangShen and nothing remembered
+    const facts: LeverFacts = { ...base, fallback: LIANGSHEN_PRESET_ID, previous: undefined }
+
+    // When the restore target is computed
+    const target = restoreTarget(facts)
+
+    // Then the first available preset that is not LiangShen wins
+    expect(target).toBe('standard')
+  })
+
+  it('user who remembered a preset gets it back even when the deployment default is liangshen', () => {
+    // Given a remembered preset and a LiangShen deployment default
+    const facts: LeverFacts = { ...base, fallback: LIANGSHEN_PRESET_ID, previous: 'master' }
+
+    // When the restore target is computed
+    const target = restoreTarget(facts)
+
+    // Then the remembered preset is restored
+    expect(target).toBe('master')
   })
 
   it('skips a remembered preset the roster no longer supplies', () => {
     expect(restoreTarget({ ...base, previous: 'retired' })).toBe('standard')
-    expect(restoreTarget({ ...base, previous: 'retired', fallback: 'also-retired' })).toBeUndefined()
+    expect(restoreTarget({ ...base, available: [LIANGSHEN_PRESET_ID], previous: 'retired', fallback: 'also-retired' })).toBeUndefined()
   })
 
   it('returns nothing when the roster supplies only the LiangShen preset', () => {
