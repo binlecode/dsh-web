@@ -56,6 +56,8 @@ body {
   --dsw-alias-markdown-code-block: #e8eee8;
   --dsw-alias-markdown-code-block-banner: #dde4dd;
   --dsw-alias-markdown-inline-code: #e4ebe4;
+  --dsw-alias-bg-document-preview: #182824;
+  --dsw-alias-label-document-preview: #e6f3ee;
   --dsw-specific-input-major: #f6f9f6;
   --dsw-specific-tip: #eaf1ea;
 }
@@ -107,6 +109,8 @@ body[data-ds-dark-theme] {
   --dsw-alias-markdown-code-block: #081214;
   --dsw-alias-markdown-code-block-banner: #050d0e;
   --dsw-alias-markdown-inline-code: #101e22;
+  --dsw-alias-bg-document-preview: #0b1719;
+  --dsw-alias-label-document-preview: #d0e2dd;
   --dsw-specific-input-major: #0d171a;
   --dsw-specific-tip: #122125;
 }

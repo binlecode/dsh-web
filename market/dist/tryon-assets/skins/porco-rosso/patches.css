@@ -86,8 +86,8 @@ html[data-dsh-skin="porco-rosso"] body[data-ds-dark-theme] [data-phase="active"]
   background: linear-gradient(180deg, transparent 0%, rgba(15, 20, 31, 0.88) 36px);
 }
 
-/* Cohesive frosted glass card for Assistant conversation markdown blocks */
-html[data-dsh-skin="porco-rosso"] [data-slot="main.conversation"] div[class$="_markdown"] {
+/* Cohesive frosted glass card for Assistant conversation markdown blocks (Main chat & Subagent sidebar chat) */
+html[data-dsh-skin="porco-rosso"] :is([data-slot="main.conversation"], [data-sidebar-chat]) div[class$="_markdown"] {
   /* 下限 0.62：防止外部透明度滑杆把正文对比度压到 AA 以下（WS-04） */
   background: rgba(251, 248, 241, max(0.62, var(--dsh-skin-bubble-alpha, 0.82))) !important;
   backdrop-filter: blur(var(--dsh-skin-bubble-blur, 14px)) saturate(1.15);
@@ -99,20 +99,20 @@ html[data-dsh-skin="porco-rosso"] [data-slot="main.conversation"] div[class$="_m
   line-height: 1.65;
 }
 
-html[data-dsh-skin="porco-rosso"] body[data-ds-dark-theme] [data-slot="main.conversation"] div[class$="_markdown"] {
+html[data-dsh-skin="porco-rosso"] body[data-ds-dark-theme] :is([data-slot="main.conversation"], [data-sidebar-chat]) div[class$="_markdown"] {
   background: rgba(21, 28, 42, max(0.62, var(--dsh-skin-bubble-alpha, 0.84))) !important;
   border: 1px solid rgba(230, 200, 160, 0.12);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
 }
 
 /* Hide empty markdown containers and empty paragraphs so no ghost white bar appears */
-html[data-dsh-skin="porco-rosso"] [data-slot="main.conversation"] div[class$="_markdown"]:empty,
-html[data-dsh-skin="porco-rosso"] [data-slot="main.conversation"] div[class$="_markdown"] > p:empty {
+html[data-dsh-skin="porco-rosso"] :is([data-slot="main.conversation"], [data-sidebar-chat]) div[class$="_markdown"]:empty,
+html[data-dsh-skin="porco-rosso"] :is([data-slot="main.conversation"], [data-sidebar-chat]) div[class$="_markdown"] > p:empty {
   display: none !important;
 }
 
 /* Reset children inside the markdown card so they flow naturally */
-html[data-dsh-skin="porco-rosso"] [data-slot="main.conversation"] div[class$="_markdown"] > :where(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote) {
+html[data-dsh-skin="porco-rosso"] :is([data-slot="main.conversation"], [data-sidebar-chat]) div[class$="_markdown"] > :where(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote) {
   background: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -121,7 +121,7 @@ html[data-dsh-skin="porco-rosso"] [data-slot="main.conversation"] div[class$="_m
   padding-right: 0;
 }
 
-html[data-dsh-skin="porco-rosso"] [data-slot="main.conversation"] div[class$="_markdown"] > :where(ul, ol) {
+html[data-dsh-skin="porco-rosso"] :is([data-slot="main.conversation"], [data-sidebar-chat]) div[class$="_markdown"] > :where(ul, ol) {
   padding-left: 22px;
 }
 
@@ -212,18 +212,24 @@ html[data-dsh-skin="porco-rosso"] body[data-ds-dark-theme] [data-variant="think"
   -webkit-text-fill-color: #fbf6ee !important;
 }
 
-/* Thinking body (expanded text) — sharp, high-contrast readable */
-html[data-dsh-skin="porco-rosso"] [data-variant="think"] [data-disclosure-row] + div,
-html[data-dsh-skin="porco-rosso"] [data-variant="think"] [data-disclosure-row] + div * {
+/* Thinking body (expanded text) — sharp, high-contrast readable (compatible with compact Markdown) */
+html[data-dsh-skin="porco-rosso"] [data-variant="think"] [data-disclosure-row] + div {
   color: #23180f !important;
-  -webkit-text-fill-color: #23180f !important;
   font-size: 13px !important;
   line-height: 1.65 !important;
   opacity: 1 !important;
 }
 
-html[data-dsh-skin="porco-rosso"] body[data-ds-dark-theme] [data-variant="think"] [data-disclosure-row] + div,
-html[data-dsh-skin="porco-rosso"] body[data-ds-dark-theme] [data-variant="think"] [data-disclosure-row] + div * {
+html[data-dsh-skin="porco-rosso"] [data-variant="think"] [data-disclosure-row] + div :where(p, li, blockquote, span:not([class*="shiki"] span)) {
+  color: #23180f !important;
+  -webkit-text-fill-color: #23180f !important;
+}
+
+html[data-dsh-skin="porco-rosso"] body[data-ds-dark-theme] [data-variant="think"] [data-disclosure-row] + div {
+  color: #fbf6ee !important;
+}
+
+html[data-dsh-skin="porco-rosso"] body[data-ds-dark-theme] [data-variant="think"] [data-disclosure-row] + div :where(p, li, blockquote, span:not([class*="shiki"] span)) {
   color: #fbf6ee !important;
   -webkit-text-fill-color: #fbf6ee !important;
 }
@@ -558,6 +564,48 @@ html[data-dsh-skin="porco-rosso"] [class*="ArchivedSessionsSection_row"]:hover {
 html[data-dsh-skin="porco-rosso"] body[data-ds-dark-theme] [class*="ArchivedSessionsSection_row"]:hover {
   background: rgba(239, 68, 68, 0.08) !important;
 }
+
+/* ── UI 0.1.6 适配：计划审阅与卡片 (PlanCards) ── */
+html[data-dsh-skin="porco-rosso"] [data-plan-artifacts] [data-plan-card] {
+  background: rgba(251, 248, 241, 0.88) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(120, 75, 35, 0.16) !important;
+  border-radius: 14px !important;
+  transition: all 180ms ease !important;
+}
+
+html[data-dsh-skin="porco-rosso"] [data-plan-artifacts] [data-plan-card]:hover {
+  background: rgba(246, 240, 227, 0.96) !important;
+  border-color: rgba(195, 32, 38, 0.35) !important;
+  box-shadow: 0 4px 12px rgba(195, 32, 38, 0.08) !important;
+}
+
+html[data-dsh-skin="porco-rosso"] body[data-ds-dark-theme] [data-plan-artifacts] [data-plan-card] {
+  background: rgba(21, 28, 42, 0.90) !important;
+  border-color: rgba(230, 200, 160, 0.16) !important;
+}
+
+html[data-dsh-skin="porco-rosso"] body[data-ds-dark-theme] [data-plan-artifacts] [data-plan-card]:hover {
+  background: rgba(28, 37, 55, 0.96) !important;
+  border-color: rgba(239, 68, 68, 0.40) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+html[data-dsh-skin="porco-rosso"] [data-plan-artifacts] [data-plan-card] [class*="cardOpen"] {
+  background: rgba(195, 32, 38, 0.10) !important;
+  border: 1px solid rgba(195, 32, 38, 0.25) !important;
+  color: #c32026 !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+}
+
+html[data-dsh-skin="porco-rosso"] body[data-ds-dark-theme] [data-plan-artifacts] [data-plan-card] [class*="cardOpen"] {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+  color: #ef4444 !important;
+}
+
 
 
 

@@ -86,8 +86,8 @@ html[data-dsh-skin="white-snake"] body[data-ds-dark-theme] [data-phase="active"]
   background: linear-gradient(180deg, transparent 0%, rgba(11, 19, 21, 0.88) 36px);
 }
 
-/* Cohesive frosted glass card for Assistant conversation markdown blocks */
-html[data-dsh-skin="white-snake"] [data-slot="main.conversation"] div[class$="_markdown"] {
+/* Cohesive frosted glass card for Assistant conversation markdown blocks (Main chat & Subagent sidebar chat) */
+html[data-dsh-skin="white-snake"] :is([data-slot="main.conversation"], [data-sidebar-chat]) div[class$="_markdown"] {
   /* 下限 0.62：防止外部透明度滑杆把正文对比度压到 AA 以下（WS-04） */
   background: rgba(242, 245, 242, max(0.62, var(--dsh-skin-bubble-alpha, 0.82))) !important;
   backdrop-filter: blur(var(--dsh-skin-bubble-blur, 14px)) saturate(1.15);
@@ -99,20 +99,19 @@ html[data-dsh-skin="white-snake"] [data-slot="main.conversation"] div[class$="_m
   line-height: 1.65;
 }
 
-html[data-dsh-skin="white-snake"] body[data-ds-dark-theme] [data-slot="main.conversation"] div[class$="_markdown"] {
+html[data-dsh-skin="white-snake"] body[data-ds-dark-theme] :is([data-slot="main.conversation"], [data-sidebar-chat]) div[class$="_markdown"] {
   background: rgba(16, 26, 29, max(0.62, var(--dsh-skin-bubble-alpha, 0.84))) !important;
   border-color: rgba(45, 212, 191, 0.14);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* 消除正文未到达时产生的空 Markdown 幽灵白条（WS-09） */
-html[data-dsh-skin="white-snake"] [data-slot="main.conversation"] div[class$="_markdown"]:empty {
+html[data-dsh-skin="white-snake"] :is([data-slot="main.conversation"], [data-sidebar-chat]) div[class$="_markdown"]:empty {
   display: none !important;
 }
 
-/* User Bubble high-contrast text & border */
-html[data-dsh-skin="white-snake"] [data-slot="main.conversation"] div[class*="_userBubble_"],
-html[data-dsh-skin="white-snake"] [data-slot="main.conversation"] [data-role="user"] {
+/* User message bubbles with frosted glass backdrop */
+html[data-dsh-skin="white-snake"] :is([data-chat-flow-kind="user"],[data-chat-flow-kind="steering"]) [class$="_bubble"] {
   background: rgba(235, 242, 237, max(0.62, var(--dsh-skin-bubble-alpha, 0.85))) !important;
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
@@ -121,15 +120,14 @@ html[data-dsh-skin="white-snake"] [data-slot="main.conversation"] [data-role="us
   border-radius: 12px !important;
 }
 
-html[data-dsh-skin="white-snake"] body[data-ds-dark-theme] [data-slot="main.conversation"] div[class*="_userBubble_"],
-html[data-dsh-skin="white-snake"] body[data-ds-dark-theme] [data-slot="main.conversation"] [data-role="user"] {
+html[data-dsh-skin="white-snake"] body[data-ds-dark-theme] :is([data-chat-flow-kind="user"],[data-chat-flow-kind="steering"]) [class$="_bubble"] {
   background: rgba(18, 30, 34, max(0.62, var(--dsh-skin-bubble-alpha, 0.85))) !important;
   border: 1px solid rgba(45, 212, 191, 0.25) !important;
   color: #ebf5f3 !important;
 }
 
 /* ── Deep Thinking / Reasoning Container ── */
-html[data-dsh-skin="white-snake"] [data-slot="main.conversation"] [data-variant="think"] {
+html[data-dsh-skin="white-snake"] [data-variant="think"] {
   contain: none !important;
   overflow: visible !important;
   height: auto !important;
@@ -141,39 +139,47 @@ html[data-dsh-skin="white-snake"] [data-slot="main.conversation"] [data-variant=
   margin: 6px 0 !important;
 }
 
-html[data-dsh-skin="white-snake"] body[data-ds-dark-theme] [data-slot="main.conversation"] [data-variant="think"] {
+html[data-dsh-skin="white-snake"] body[data-ds-dark-theme] [data-variant="think"] {
   border-left: 3px solid #2dd4bf !important;
   background: rgba(14, 24, 27, 0.88) !important;
 }
 
 /* Thinking disclosure summary */
-html[data-dsh-skin="white-snake"] [data-slot="main.conversation"] [data-variant="think"] [data-disclosure-row] {
+html[data-dsh-skin="white-snake"] [data-variant="think"] [data-disclosure-row] {
   color: #107c65 !important;
   font-weight: 600 !important;
 }
 
-html[data-dsh-skin="white-snake"] body[data-ds-dark-theme] [data-slot="main.conversation"] [data-variant="think"] [data-disclosure-row] {
+html[data-dsh-skin="white-snake"] body[data-ds-dark-theme] [data-variant="think"] [data-disclosure-row] {
   color: #2dd4bf !important;
 }
 
-html[data-dsh-skin="white-snake"] [data-slot="main.conversation"] [data-variant="think"] [data-disclosure-row] span {
+html[data-dsh-skin="white-snake"] [data-variant="think"] [data-disclosure-row] span {
   color: #161e19 !important;
 }
 
-html[data-dsh-skin="white-snake"] body[data-ds-dark-theme] [data-slot="main.conversation"] [data-variant="think"] [data-disclosure-row] span {
+html[data-dsh-skin="white-snake"] body[data-ds-dark-theme] [data-variant="think"] [data-disclosure-row] span {
   color: #ebf5f3 !important;
 }
 
-/* Thinking body text - crisp, high-contrast */
-html[data-dsh-skin="white-snake"] [data-slot="main.conversation"] [data-variant="think"] [data-disclosure-body] {
+/* Thinking body text - crisp, high-contrast (compatible with compact Markdown) */
+html[data-dsh-skin="white-snake"] [data-variant="think"] [data-disclosure-row] + div {
   color: #161e19 !important;
-  -webkit-text-fill-color: #161e19 !important;
   opacity: 1 !important;
   font-size: 13px !important;
   line-height: 1.6 !important;
 }
 
-html[data-dsh-skin="white-snake"] body[data-ds-dark-theme] [data-slot="main.conversation"] [data-variant="think"] [data-disclosure-body] {
+html[data-dsh-skin="white-snake"] [data-variant="think"] [data-disclosure-row] + div :where(p, li, blockquote, span:not([class*="shiki"] span)) {
+  color: #161e19 !important;
+  -webkit-text-fill-color: #161e19 !important;
+}
+
+html[data-dsh-skin="white-snake"] body[data-ds-dark-theme] [data-variant="think"] [data-disclosure-row] + div {
+  color: #d1e2de !important;
+}
+
+html[data-dsh-skin="white-snake"] body[data-ds-dark-theme] [data-variant="think"] [data-disclosure-row] + div :where(p, li, blockquote, span:not([class*="shiki"] span)) {
   color: #d1e2de !important;
   -webkit-text-fill-color: #d1e2de !important;
 }
@@ -341,6 +347,65 @@ html[data-dsh-skin="white-snake"] [data-slot="conversation.hero.brand.mark"]::be
 html[data-dsh-skin="white-snake"] body[data-dsh-tab-hidden] [data-slot="conversation.hero.brand.mark"]::before {
   animation-play-state: paused !important;
 }
+
+/* ── UI 0.1.6 适配：半透明右侧栏与头部 ── */
+html[data-dsh-skin="white-snake"] [data-slot="main.conversation"] header,
+html[data-dsh-skin="white-snake"] [data-slot="rightbar.session"] > *,
+html[data-dsh-skin="white-snake"] [data-sidebar-right-panel] {
+  background: rgba(242, 246, 242, 0.78) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+html[data-dsh-skin="white-snake"] body[data-ds-dark-theme] [data-slot="main.conversation"] header,
+html[data-dsh-skin="white-snake"] body[data-ds-dark-theme] [data-slot="rightbar.session"] > *,
+html[data-dsh-skin="white-snake"] body[data-ds-dark-theme] [data-sidebar-right-panel] {
+  background: rgba(16, 26, 29, 0.82) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* ── UI 0.1.6 适配：计划审阅与卡片 (PlanCards) ── */
+html[data-dsh-skin="white-snake"] [data-plan-artifacts] [data-plan-card] {
+  background: rgba(242, 246, 242, 0.88) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(16, 124, 101, 0.16) !important;
+  border-radius: 14px !important;
+  transition: all 180ms ease !important;
+}
+
+html[data-dsh-skin="white-snake"] [data-plan-artifacts] [data-plan-card]:hover {
+  background: rgba(235, 242, 237, 0.96) !important;
+  border-color: rgba(16, 124, 101, 0.35) !important;
+  box-shadow: 0 4px 12px rgba(16, 124, 101, 0.08) !important;
+}
+
+html[data-dsh-skin="white-snake"] body[data-ds-dark-theme] [data-plan-artifacts] [data-plan-card] {
+  background: rgba(16, 26, 29, 0.90) !important;
+  border-color: rgba(45, 212, 191, 0.16) !important;
+}
+
+html[data-dsh-skin="white-snake"] body[data-ds-dark-theme] [data-plan-artifacts] [data-plan-card]:hover {
+  background: rgba(22, 34, 38, 0.96) !important;
+  border-color: rgba(45, 212, 191, 0.40) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+html[data-dsh-skin="white-snake"] [data-plan-artifacts] [data-plan-card] [class*="cardOpen"] {
+  background: rgba(16, 124, 101, 0.10) !important;
+  border: 1px solid rgba(16, 124, 101, 0.25) !important;
+  color: #107c65 !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+}
+
+html[data-dsh-skin="white-snake"] body[data-ds-dark-theme] [data-plan-artifacts] [data-plan-card] [class*="cardOpen"] {
+  background: rgba(45, 212, 191, 0.15) !important;
+  border-color: rgba(45, 212, 191, 0.35) !important;
+  color: #2dd4bf !important;
+}
+
 
 html[data-dsh-skin="white-snake"] [id="root"] { background: transparent; }
 

@@ -86,8 +86,8 @@ html[data-dsh-skin="last-exile"] body[data-ds-dark-theme] [data-phase="active"] 
   background: linear-gradient(180deg, transparent 0%, rgba(11, 22, 38, 0.88) 36px);
 }
 
-/* Cohesive frosted glass card for Assistant conversation markdown blocks */
-html[data-dsh-skin="last-exile"] [data-slot="main.conversation"] div[class$="_markdown"] {
+/* Cohesive frosted glass card for Assistant conversation markdown blocks (Main chat & Subagent sidebar chat) */
+html[data-dsh-skin="last-exile"] :is([data-slot="main.conversation"], [data-sidebar-chat]) div[class$="_markdown"] {
   color: #1b2220 !important;
   /* 下限 0.62：防止外部透明度滑杆把正文对比度压到 AA 以下（WS-04） */
   background: rgba(238, 240, 234, max(0.62, var(--dsh-skin-bubble-alpha, 0.82))) !important;
@@ -100,7 +100,7 @@ html[data-dsh-skin="last-exile"] [data-slot="main.conversation"] div[class$="_ma
   line-height: 1.65;
 }
 
-html[data-dsh-skin="last-exile"] body[data-ds-dark-theme] [data-slot="main.conversation"] div[class$="_markdown"] {
+html[data-dsh-skin="last-exile"] body[data-ds-dark-theme] :is([data-slot="main.conversation"], [data-sidebar-chat]) div[class$="_markdown"] {
   color: #e8f0f7 !important;
   background: rgba(18, 35, 60, max(0.62, var(--dsh-skin-bubble-alpha, 0.84))) !important;
   border: 1px solid rgba(34, 211, 238, 0.14);
@@ -108,13 +108,13 @@ html[data-dsh-skin="last-exile"] body[data-ds-dark-theme] [data-slot="main.conve
 }
 
 /* Hide empty markdown containers and empty paragraphs so no ghost white bar appears */
-html[data-dsh-skin="last-exile"] [data-slot="main.conversation"] div[class$="_markdown"]:empty,
-html[data-dsh-skin="last-exile"] [data-slot="main.conversation"] div[class$="_markdown"] > p:empty {
+html[data-dsh-skin="last-exile"] :is([data-slot="main.conversation"], [data-sidebar-chat]) div[class$="_markdown"]:empty,
+html[data-dsh-skin="last-exile"] :is([data-slot="main.conversation"], [data-sidebar-chat]) div[class$="_markdown"] > p:empty {
   display: none !important;
 }
 
 /* Reset children inside the markdown card so they flow naturally */
-html[data-dsh-skin="last-exile"] [data-slot="main.conversation"] div[class$="_markdown"] > :where(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote) {
+html[data-dsh-skin="last-exile"] :is([data-slot="main.conversation"], [data-sidebar-chat]) div[class$="_markdown"] > :where(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote) {
   background: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -123,7 +123,7 @@ html[data-dsh-skin="last-exile"] [data-slot="main.conversation"] div[class$="_ma
   padding-right: 0;
 }
 
-html[data-dsh-skin="last-exile"] [data-slot="main.conversation"] div[class$="_markdown"] > :where(ul, ol) {
+html[data-dsh-skin="last-exile"] :is([data-slot="main.conversation"], [data-sidebar-chat]) div[class$="_markdown"] > :where(ul, ol) {
   padding-left: 22px;
 }
 
@@ -221,18 +221,24 @@ html[data-dsh-skin="last-exile"] body[data-ds-dark-theme] [data-variant="think"]
   -webkit-text-fill-color: #e8f0f7 !important;
 }
 
-/* Thinking body (expanded text) — sharp, high-contrast readable vintage typewriter ink */
-html[data-dsh-skin="last-exile"] [data-variant="think"] [data-disclosure-row] + div,
-html[data-dsh-skin="last-exile"] [data-variant="think"] [data-disclosure-row] + div * {
+/* Thinking body (expanded text) — sharp, high-contrast readable vintage typewriter ink (compatible with compact Markdown) */
+html[data-dsh-skin="last-exile"] [data-variant="think"] [data-disclosure-row] + div {
   color: #17201d !important;
-  -webkit-text-fill-color: #17201d !important;
   font-size: 13px !important;
   line-height: 1.65 !important;
   opacity: 1 !important;
 }
 
-html[data-dsh-skin="last-exile"] body[data-ds-dark-theme] [data-variant="think"] [data-disclosure-row] + div,
-html[data-dsh-skin="last-exile"] body[data-ds-dark-theme] [data-variant="think"] [data-disclosure-row] + div * {
+html[data-dsh-skin="last-exile"] [data-variant="think"] [data-disclosure-row] + div :where(p, li, blockquote, span:not([class*="shiki"] span)) {
+  color: #17201d !important;
+  -webkit-text-fill-color: #17201d !important;
+}
+
+html[data-dsh-skin="last-exile"] body[data-ds-dark-theme] [data-variant="think"] [data-disclosure-row] + div {
+  color: #e8f0f7 !important;
+}
+
+html[data-dsh-skin="last-exile"] body[data-ds-dark-theme] [data-variant="think"] [data-disclosure-row] + div :where(p, li, blockquote, span:not([class*="shiki"] span)) {
   color: #e8f0f7 !important;
   -webkit-text-fill-color: #e8f0f7 !important;
 }
@@ -560,6 +566,48 @@ html[data-dsh-skin="last-exile"] [class*="ArchivedSessionsSection_row"]:hover {
 html[data-dsh-skin="last-exile"] body[data-ds-dark-theme] [class*="ArchivedSessionsSection_row"]:hover {
   background: rgba(34, 211, 238, 0.08) !important;
 }
+
+/* ── UI 0.1.6 适配：计划审阅与卡片 (PlanCards) ── */
+html[data-dsh-skin="last-exile"] [data-plan-artifacts] [data-plan-card] {
+  background: rgba(238, 240, 234, 0.88) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(74, 88, 62, 0.16) !important;
+  border-radius: 14px !important;
+  transition: all 180ms ease !important;
+}
+
+html[data-dsh-skin="last-exile"] [data-plan-artifacts] [data-plan-card]:hover {
+  background: rgba(227, 231, 221, 0.96) !important;
+  border-color: rgba(143, 100, 16, 0.35) !important;
+  box-shadow: 0 4px 12px rgba(143, 100, 16, 0.08) !important;
+}
+
+html[data-dsh-skin="last-exile"] body[data-ds-dark-theme] [data-plan-artifacts] [data-plan-card] {
+  background: rgba(16, 32, 58, 0.90) !important;
+  border-color: rgba(34, 211, 238, 0.16) !important;
+}
+
+html[data-dsh-skin="last-exile"] body[data-ds-dark-theme] [data-plan-artifacts] [data-plan-card]:hover {
+  background: rgba(22, 43, 77, 0.96) !important;
+  border-color: rgba(6, 182, 212, 0.40) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+html[data-dsh-skin="last-exile"] [data-plan-artifacts] [data-plan-card] [class*="cardOpen"] {
+  background: rgba(143, 100, 16, 0.10) !important;
+  border: 1px solid rgba(143, 100, 16, 0.25) !important;
+  color: #8f6410 !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+}
+
+html[data-dsh-skin="last-exile"] body[data-ds-dark-theme] [data-plan-artifacts] [data-plan-card] [class*="cardOpen"] {
+  background: rgba(6, 182, 212, 0.15) !important;
+  border-color: rgba(6, 182, 212, 0.35) !important;
+  color: #22d3ee !important;
+}
+
 
 
 

@@ -56,6 +56,8 @@ html[data-dsh-skin="porco-rosso"] body {
   --dsw-alias-markdown-code-block: #f2ece0;
   --dsw-alias-markdown-code-block-banner: #e8dfcd;
   --dsw-alias-markdown-inline-code: #f0e9dc;
+  --dsw-alias-bg-document-preview: #2d241e;
+  --dsw-alias-label-document-preview: #f5eedf;
   --dsw-specific-input-major: #fdfaf4;
   --dsw-specific-tip: #f1e9da;
 }
@@ -107,6 +109,8 @@ html[data-dsh-skin="porco-rosso"] body[data-ds-dark-theme] {
   --dsw-alias-markdown-code-block: #121a28;
   --dsw-alias-markdown-code-block-banner: #18222f;
   --dsw-alias-markdown-inline-code: #16202f;
+  --dsw-alias-bg-document-preview: #121824;
+  --dsw-alias-label-document-preview: #dcd3c4;
   --dsw-specific-input-major: #141d2b;
   --dsw-specific-tip: #17212f;
 }
