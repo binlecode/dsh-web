@@ -15,9 +15,9 @@
 - `skin.json` — v2 清单：`contributes.stylesheet` / `patches` / `backgroundMedia`
   （light → `assets/porco001.jpg`，dark → `assets/porco002.jpg`，各带实测校准遮罩）
 - `skin.css` — L1：基础色 + 全部 `--dsw-*` 调色板重映射（亮色 `:root`、暗色 `body[data-ds-dark-theme]`）
-- `patches.css` — L3：磨砂透光面板、输入框定制、界面矢量图标（`assets/savoia-hero.svg` 与 `assets/porco-emblem.svg`）
-- `hooks.mjs` — 运行时增强：昼夜壁纸平滑过渡与原声播放器
-- `assets/` — 核心昼夜壁纸、矢量图标与原创吉卜力纯钢琴氛围音乐（昼篇《亚得里亚的夏日晴空》与夜篇《秘密海湾的风之通道》）
+- `patches.css` — L3：磨砂透光面板、子代理独立侧栏对话、计划模式审阅卡片、界面矢量图标（`assets/savoia-hero.svg` 与 `assets/porco-emblem.svg`）
+- `hooks.mjs` — 运行时增强：昼夜壁纸平滑过渡与飞行员徽章浮层
+- `assets/` — 核心昼夜超清壁纸与矢量图标
 - `NOTICE` — 角色与美术素材版权出处声明
 - `LICENSE` — CC BY-NC-SA 4.0 许可证文本
 

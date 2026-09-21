@@ -15,9 +15,9 @@ GONZO 经典科幻动画《最后流亡》（2003）同人主题：克劳斯与�
 - `skin.json` — v2 清单：`contributes.stylesheet` / `patches` / `backgroundMedia`
   （light → `assets/vanship.jpg`，dark → `assets/grandstream.jpg`，各带实测校准遮罩）
 - `skin.css` — L1：基础色 + 全部 `--dsw-*` 调色板重映射（亮色 `:root`、暗色 `body[data-ds-dark-theme]`）
-- `patches.css` — L3：维多利亚复古工业磨砂面板、先锋艇仪表盘思考卡片、联队徽章（`assets/vanship-emblem.svg`）
-- `hooks.mjs` — 运行时增强：昼夜壁纸平滑过渡与原声播放器
-- `assets/` — 核心昼夜壁纸、矢量徽章与原创先锋艇新古典室内乐氛围配乐（昼篇《破晓云海》与夜篇《逆风穿越·大风暴区》）
+- `patches.css` — L3：维多利亚复古工业磨砂面板、子代理独立侧栏对话、计划模式审阅卡片、联队徽章（`assets/vanship-emblem.svg`）
+- `hooks.mjs` — 运行时增强：昼夜壁纸平滑过渡与先锋艇飞行徽章浮层
+- `assets/` — 核心昼夜超清壁纸与矢量徽章
 - `NOTICE` — 角色与美术素材版权出处声明
 - `LICENSE` — CC BY-NC-SA 4.0 许可证文本
 

@@ -3,9 +3,9 @@
   "source": "https://dsh-market.com",
   "kind": "skin",
   "id": "last-exile",
-  "installedAt": "2026-09-21T00:20:20.939108+00:00",
+  "installedAt": "2026-09-21T03:18:16.160256+00:00",
   "files": {
-    "skin.json": "d460f32bad0d468c81ee267dfa14bbfa4eb679197103436c170b2624910b5279",
-    "hooks.mjs": "2a9a2b628efcc738d2c9acf543c931f8c1dc083e2204d609e14754b6241a69a7"
+    "skin.json": "ce6f66c6da9f4ab6e350784f9a837f73caaeef492da97ad43f20beed4097d947",
+    "hooks.mjs": "b0a11dc195252efbac7827a4ee2a30f8387016029d0759681b29de2fa2eccefa"
   }
 }

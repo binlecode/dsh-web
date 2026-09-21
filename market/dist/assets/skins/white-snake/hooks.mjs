@@ -1,15 +1,11 @@
 /**
- * Light Chaser Animation White Snake (白蛇：缘起 + 白蛇：浮生) skin hooks.
+ * white-snake skin hooks (Visual & Theme Edition).
  *
- * Sidebar footer widgets:
- * 1. Quick Wallpaper Switcher (Auto Adaptive / Broken Bridge / Boat Song / Snakes Meadow /
- *    Baoqing Den / Sunset Rooftop / Snake Destiny / Lin'an Mist / Moonlight Cave / Lantern Twilight)
- *    with localStorage persistence, mounted on the Jade Hairpin flight badge.
- * 2. West Lake Gramophone vinyl audio player with four classic OST tracks:
- *    • 郭好为《何须问》（舟行定情曲）
- *    • 郭好为《断桥初识》（西湖借伞原声）
- *    • 郭好为《宝青坊》（奇门玄机原声）
- *    • 郭好为《诀别》（雪岭宿命原声）
+ * 1. Quick Wallpaper Switcher with localStorage persistence.
+ * 2. Thematic Badge Card with wallpaper trigger popover.
+ * 3. Dynamic contrast veil management for WCAG AAA compliance.
+ *
+ * Fully compliant with DSH Skin Center pure visual presentation contracts.
  */
 
 export default function defineSkinHooks() {
@@ -151,41 +147,6 @@ export default function defineSkinHooks() {
 
       applyWallpaper(BACKGROUNDS[bgIndex]);
 
-      // Music playlist
-      const playlist = [
-        {
-          id: "broken-bridge-vista",
-          title: "断桥远眺 · 丝竹春水 (D宫调式)",
-          artist: "原创昼篇 · MiniMax MLX",
-          tag: "水墨",
-          file: "broken-bridge-vista.mp3",
-        },
-        {
-          id: "night-boat-reverie",
-          title: "夜航幽月 · 水月空明 (G羽调式)",
-          artist: "原创夜篇 · MiniMax MLX",
-          tag: "空灵",
-          file: "night-boat-reverie.mp3",
-        },
-      ];
-
-      let currentIndex = 0;
-      let isPlaying = false;
-
-      const VOLUME_KEY = 'dsh.theme.white-snake.volume';
-      let currentVolume = 0.45;
-      try {
-        const savedVol = localStorage.getItem(VOLUME_KEY);
-        if (savedVol !== null && !isNaN(Number(savedVol))) {
-          currentVolume = Math.max(0, Math.min(1, Number(savedVol)));
-        }
-      } catch (_) {}
-
-      const audio = new Audio();
-      audio.preload = 'none';
-      audio.volume = currentVolume;
-
-      // Inject Styles (WS-07: Scoped via ctx.scopeAttr)
       const styleTag = document.createElement('style');
       styleTag.id = 'white-snake-styles';
       const s = `html[data-dsh-skin="${ctx.scopeAttr}"]`;
@@ -200,9 +161,6 @@ export default function defineSkinHooks() {
         body[data-dsh-tab-hidden] ${s} .snake-disc-spin-target { animation-play-state: paused !important; }
 
         ${s} .snake-badge-card:focus-visible,
-        ${s} .snake-music-card:focus-visible,
-        ${s} .snake-bg-btn:focus-visible,
-        ${s} .snake-btn-hover:focus-visible,
         ${s} .snake-popover-item:focus-visible,
         ${s} .snake-popover-close:focus-visible,
         ${s} .snake-popover-cycle:focus-visible {
@@ -342,9 +300,6 @@ export default function defineSkinHooks() {
 
         /* Collapsed / Rail sidebar mode adjustments */
         ${s} [data-sidebar-collapsed] .snake-badge-content,
-        ${s} [data-sidebar-collapsed] .snake-music-info {
-          display: none !important;
-        }
         ${s} [data-sidebar-collapsed] .snake-badge-card,
         ${s} [data-sidebar-collapsed] .snake-music-card {
           width: 36px;
@@ -771,128 +726,7 @@ export default function defineSkinHooks() {
       badgeCard.appendChild(badgeContent);
       container.appendChild(badgeCard);
 
-      // --- 2. West Lake Gramophone Music Player (WhiteSnakeMusic) ---
-      const musicCard = document.createElement('div');
-      musicCard.className = 'snake-music-card';
-      musicCard.setAttribute('data-snake-music-player', 'true');
-      musicCard.setAttribute('role', 'group');
-      musicCard.setAttribute('tabindex', '0');
-
-      const discWrap = document.createElement('div');
-      discWrap.className = 'snake-disc-wrap';
-
-      const disc = document.createElement('div');
-      disc.className = 'snake-disc snake-disc-spin-target';
-
-      const discCore = document.createElement('div');
-      discCore.className = 'snake-disc-core';
-      disc.appendChild(discCore);
-      discWrap.appendChild(disc);
-      musicCard.appendChild(discWrap);
-
-      const info = document.createElement('div');
-      info.className = 'snake-music-info';
-
-      const titleRow = document.createElement('div');
-      titleRow.className = 'snake-music-title-row';
-
-      const titleGroup = document.createElement('div');
-      titleGroup.className = 'snake-music-title-group';
-
-      const tagBadge = document.createElement('span');
-      tagBadge.className = 'snake-music-tag';
-      titleGroup.appendChild(tagBadge);
-
-      const title = document.createElement('span');
-      title.className = 'snake-music-title';
-      const updateMusicTitleTip = setupOverflowTip(title, () => `${playlist[currentIndex].title} • ${playlist[currentIndex].artist}`);
-      titleGroup.appendChild(title);
-      titleRow.appendChild(titleGroup);
-
-      const ctrlGroup = document.createElement('div');
-      ctrlGroup.className = 'snake-music-ctrl-group';
-
-      const playIcon = document.createElement('span');
-      playIcon.className = 'snake-btn-hover';
-      playIcon.textContent = '▶';
-      playIcon.setAttribute('title', '播放 / 暂停');
-      ctrlGroup.appendChild(playIcon);
-
-      const nextBtn = document.createElement('span');
-      nextBtn.className = 'snake-btn-hover';
-      nextBtn.textContent = '⏭';
-      nextBtn.setAttribute('title', '切换下一首');
-      ctrlGroup.appendChild(nextBtn);
-
-      const volWrap = document.createElement('div');
-      volWrap.className = 'snake-vol-wrap';
-
-      const volBtn = document.createElement('span');
-      volBtn.className = 'snake-btn-hover snake-vol-btn';
-
-      const updateVolIcon = () => {
-        if (audio.muted || audio.volume === 0) {
-          volBtn.textContent = '🔇';
-          volBtn.title = '已静音 (点击恢复音量)';
-        } else if (audio.volume < 0.5) {
-          volBtn.textContent = '🔉';
-          volBtn.title = `音量: ${Math.round(audio.volume * 100)}% (点击静音)`;
-        } else {
-          volBtn.textContent = '🔊';
-          volBtn.title = `音量: ${Math.round(audio.volume * 100)}% (点击静音)`;
-        }
-      };
-      updateVolIcon();
-
-      const volSlider = document.createElement('input');
-      volSlider.type = 'range';
-      volSlider.min = '0';
-      volSlider.max = '1';
-      volSlider.step = '0.05';
-      volSlider.value = String(currentVolume);
-      volSlider.className = 'snake-vol-slider';
-      volSlider.title = '滑动调节音量';
-
-      volBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (audio.muted || audio.volume === 0) {
-          audio.muted = false;
-          audio.volume = currentVolume > 0 ? currentVolume : 0.45;
-          volSlider.value = String(audio.volume);
-        } else {
-          audio.muted = true;
-        }
-        updateVolIcon();
-      });
-
-      volSlider.addEventListener('click', (e) => e.stopPropagation());
-      volSlider.addEventListener('input', (e) => {
-        e.stopPropagation();
-        const v = Number(e.target.value);
-        audio.muted = false;
-        audio.volume = v;
-        currentVolume = v;
-        try {
-          localStorage.setItem(VOLUME_KEY, String(v));
-        } catch (_) {}
-        updateVolIcon();
-      });
-
-      volWrap.appendChild(volBtn);
-      volWrap.appendChild(volSlider);
-      ctrlGroup.appendChild(volWrap);
-
-      titleRow.appendChild(ctrlGroup);
-      info.appendChild(titleRow);
-
-      const subtitle = document.createElement('span');
-      subtitle.className = 'snake-music-sub';
-      const updateSubtitleTip = setupOverflowTip(subtitle, () => subtitle.textContent);
-      info.appendChild(subtitle);
-      musicCard.appendChild(info);
-      container.appendChild(musicCard);
-
-      // --- 3. Wallpaper Popover (Mini Palette) ---
+      // --- 2. Floating Wallpaper Selector Popover ---
       const popover = document.createElement('div');
       popover.className = 'snake-wallpaper-popover';
       popover.setAttribute('role', 'dialog');
@@ -1052,9 +886,7 @@ export default function defineSkinHooks() {
           bgBtn.style.border = '1px solid rgba(45, 212, 191, 0.38)';
           bgBtn.style.color = '#2dd4bf';
 
-          musicCard.style.background = 'rgba(16, 26, 29, 0.90)';
-          musicCard.style.border = isPlaying ? '1px solid rgba(45, 212, 191, 0.55)' : '1px solid rgba(45, 212, 191, 0.28)';
-          musicCard.style.boxShadow = isPlaying ? '0 4px 20px rgba(45, 212, 191, 0.25)' : '0 4px 16px rgba(0, 0, 0, 0.50)';
+          
           disc.style.background = 'radial-gradient(circle, #2dd4bf 0%, #0d9488 45%, #042f2e 100%)';
           disc.style.boxShadow = '0 2px 6px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(45, 212, 191, 0.4)';
           discCore.style.background = '#ffffff';
@@ -1093,9 +925,7 @@ export default function defineSkinHooks() {
           bgBtn.style.border = '1px solid rgba(16, 124, 101, 0.28)';
           bgBtn.style.color = '#107c65';
 
-          musicCard.style.background = 'rgba(235, 240, 235, 0.90)';
-          musicCard.style.border = isPlaying ? '1px solid rgba(16, 124, 101, 0.55)' : '1px solid rgba(16, 124, 101, 0.22)';
-          musicCard.style.boxShadow = isPlaying ? '0 4px 20px rgba(16, 124, 101, 0.18)' : '0 4px 16px rgba(16, 30, 25, 0.10)';
+          
           disc.style.background = 'radial-gradient(circle, #5eead4 0%, #107c65 50%, #064e3b 100%)';
           disc.style.boxShadow = '0 2px 6px rgba(0,0,0,0.25), inset 0 0 0 1px rgba(16, 124, 101, 0.3)';
           discCore.style.background = '#ffffff';
@@ -1159,110 +989,6 @@ export default function defineSkinHooks() {
           });
         } catch (_) {}
       });
-
-      // --- 5. Music Playback Logic ---
-      const updatePlayState = () => {
-        const track = playlist[currentIndex];
-        const counter = `[${currentIndex + 1}/${playlist.length}]`;
-
-        if (isPlaying) {
-          subtitle.textContent = `正在播放 ${counter} • 郭好为《${track.title}》`;
-          playIcon.textContent = '⏸';
-          disc.style.animation = 'snake-disc-spin 3.5s linear infinite';
-        } else {
-          subtitle.textContent = `西湖留声 ${counter} • 点击播放`;
-          playIcon.textContent = '▶';
-          disc.style.animation = 'none';
-        }
-        updateSubtitleTip();
-        applyCardTheme();
-      };
-
-      const setTrack = (index, shouldPlay = false) => {
-        currentIndex = (index + playlist.length) % playlist.length;
-        const track = playlist[currentIndex];
-        audio.src = `${ctx.assetBase}/assets/${track.file}`;
-        title.textContent = track.title;
-        updateMusicTitleTip();
-        tagBadge.textContent = track.tag;
-        musicCard.setAttribute('aria-label', `白蛇原声: [${track.tag}] ${track.title} - ${track.artist}`);
-
-        if (shouldPlay) {
-          audio.play().then(() => {
-            isPlaying = true;
-            updatePlayState();
-          }).catch((err) => {
-            console.warn('[white-snake] Audio playback failed:', err);
-            isPlaying = false;
-            updatePlayState();
-          });
-        } else {
-          isPlaying = false;
-          updatePlayState();
-        }
-      };
-
-      const togglePlay = () => {
-        if (!isPlaying) {
-          audio.play().then(() => {
-            isPlaying = true;
-            updatePlayState();
-          }).catch((err) => {
-            console.warn('[white-snake] Audio playback failed:', err);
-            isPlaying = false;
-            updatePlayState();
-          });
-        } else {
-          audio.pause();
-          isPlaying = false;
-          updatePlayState();
-        }
-      };
-
-      musicCard.addEventListener('click', (e) => {
-        // Prevent triggering toggle if user clicked on specific interactive controls
-        if (e.target === volSlider || e.target.closest('.snake-vol-wrap') || e.target === nextBtn || e.target === playIcon) {
-          return;
-        }
-        togglePlay();
-      });
-      musicCard.addEventListener('keydown', (e) => {
-        if (e.key === ' ' || e.key === 'Enter') {
-          if (e.target === musicCard || e.target === playIcon) {
-            e.preventDefault();
-            togglePlay();
-          }
-        }
-      });
-
-      playIcon.addEventListener('click', (e) => {
-        e.stopPropagation();
-        togglePlay();
-      });
-
-      nextBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        setTrack(currentIndex + 1, isPlaying);
-      });
-
-      audio.addEventListener('ended', () => {
-        setTrack(currentIndex + 1, true);
-      });
-
-      // Keyboard navigation for tracks: 'n' / arrow right for next, 'p' / arrow left for prev
-      const handleMusicHotkeys = (e) => {
-        if (['INPUT', 'TEXTAREA'].includes(e.target?.tagName) || e.target?.isContentEditable) return;
-        if (e.key === 'n' || (e.altKey && e.key === 'ArrowRight')) {
-          setTrack(currentIndex + 1, isPlaying);
-        } else if (e.key === 'p' || (e.altKey && e.key === 'ArrowLeft')) {
-          setTrack(currentIndex - 1, isPlaying);
-        }
-      };
-      document.addEventListener('keydown', handleMusicHotkeys);
-
-      // Initialize track display
-      setTrack(0, false);
-      applyCardTheme();
 
       // --- 6. Mount Container into Sidebar Footer ---
       let mounted = false;
@@ -1332,10 +1058,7 @@ export default function defineSkinHooks() {
           observer = null;
         }
 
-        try {
-          audio.pause();
-          audio.src = '';
-        } catch (_) {}
+        
 
         if (popover.parentNode) popover.parentNode.removeChild(popover);
         if (tipBubble.parentNode) tipBubble.parentNode.removeChild(tipBubble);

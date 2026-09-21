@@ -15,9 +15,9 @@ then install this skin from the [Creative Workshop](https://dsh-market.com) into
 - `skin.json` — v2 manifest: `contributes.stylesheet` / `patches` / `backgroundMedia`
   (light -> `assets/broken-bridge.jpg`, dark -> `assets/snake-destiny.jpg`, each with its own calibrated scrim)
 - `skin.css` — L1: base colour plus the full `--dsw-*` palette remap (light on `:root`, dark on `body[data-ds-dark-theme]`)
-- `patches.css` — L3: oriental silk frosted panels, jade hairpin accents, custom SVGs (`assets/white-snake-emblem.svg` and `assets/white-snake-hero.svg`)
-- `hooks.mjs` — runtime enhancement: dual wallpaper auto-adaptation and music player
-- `assets/` — canonical scene wallpapers, SVG icons, and original Chinese neoclassical ambient tracks (Broken Bridge Vista & Night Boat Reverie)
+- `patches.css` — L3: oriental silk frosted panels, subagent sidebar chat, plan review artifacts, jade hairpin accents (`assets/white-snake-emblem.svg` and `assets/white-snake-hero.svg`)
+- `hooks.mjs` — runtime enhancement: dual-buffered wallpaper auto-adaptation and jade hairpin popover
+- `assets/` — canonical scene wallpapers and SVG icons
 - `NOTICE` — artwork provenance and copyright notice
 - `LICENSE` — CC BY-NC-SA 4.0 license text
 

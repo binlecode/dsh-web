@@ -15,9 +15,9 @@ then install this skin from the [Creative Workshop](https://dsh-market.com) into
 - `skin.json` — v2 manifest: `contributes.stylesheet` / `patches` / `backgroundMedia`
   (light -> `assets/porco001.jpg`, dark -> `assets/porco002.jpg`, each with its own calibrated scrim)
 - `skin.css` — L1: base colour plus the full `--dsw-*` palette remap (light on `:root`, dark on `body[data-ds-dark-theme]`)
-- `patches.css` — L3: frosted glass panels, composer styling, custom icons (`assets/savoia-hero.svg` and `assets/porco-emblem.svg`)
-- `hooks.mjs` — runtime enhancement: dual wallpaper auto-adaptation and music player
-- `assets/` — canonical scene wallpapers, SVG icons, and original Ghibli-style solo piano ambient music (Cove Meditation & Adriatic Reverie)
+- `patches.css` — L3: frosted glass cards for conversations, subagent sidebar chat, plan review artifacts, custom SVG icons (`assets/savoia-hero.svg` and `assets/porco-emblem.svg`)
+- `hooks.mjs` — runtime enhancement: dual-buffered wallpaper auto-adaptation and aviator badge popover
+- `assets/` — canonical scene wallpapers and SVG icons
 - `NOTICE` — artwork provenance and copyright notice
 - `LICENSE` — CC BY-NC-SA 4.0 license text
 

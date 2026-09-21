@@ -1,14 +1,11 @@
 /**
- * GONZO Last Exile (最后流亡) skin hooks.
+ * last-exile skin hooks (Visual & Theme Edition).
  *
- * Sidebar footer widgets:
- * 1. Quick Wallpaper Switcher (Auto Adaptive / Grand Stream / Silvana / Clear Sky)
- *    with localStorage persistence, mounted on the Claudia flight badge.
- * 2. Claudia vinyl audio player with the four classic theme tracks:
- *    • 沖野俊太郎《Cloud Age Symphony》 (OP)
- *    • Hitomi (黑石瞳)《Over The Sky》 (ED)
- *    • Hitomi (黑石瞳)《Rays of hope》 (IN / OST2)
- *    • Dolce Triade《Lost Friend》 (OST / OST2)
+ * 1. Quick Wallpaper Switcher with localStorage persistence.
+ * 2. Thematic Badge Card with wallpaper trigger popover.
+ * 3. Dynamic contrast veil management for WCAG AAA compliance.
+ *
+ * Fully compliant with DSH Skin Center pure visual presentation contracts.
  */
 
 export default function defineSkinHooks() {
@@ -150,40 +147,6 @@ export default function defineSkinHooks() {
 
       applyWallpaper(BACKGROUNDS[bgIndex]);
 
-      const playlist = [
-        {
-          id: "cloud-sea-dawn",
-          title: "破晓云海 · 普雷斯提尔晨曦",
-          artist: "原创昼篇 · MiniMax MLX",
-          tag: "巡航",
-          file: "cloud-sea-dawn.mp3",
-        },
-        {
-          id: "grandstream-breakthrough",
-          title: "逆风穿越 · 大风暴区",
-          artist: "原创夜篇 · MiniMax MLX",
-          tag: "风暴",
-          file: "grandstream-breakthrough.mp3",
-        },
-      ];
-
-      let currentIndex = 0;
-      let isPlaying = false;
-
-      const VOLUME_KEY = 'dsh.theme.last-exile.volume';
-      let currentVolume = 0.45;
-      try {
-        const savedVol = localStorage.getItem(VOLUME_KEY);
-        if (savedVol !== null && !isNaN(Number(savedVol))) {
-          currentVolume = Math.max(0, Math.min(1, Number(savedVol)));
-        }
-      } catch (_) {}
-
-      const audio = new Audio();
-      audio.preload = 'none';
-      audio.volume = currentVolume;
-
-      // Keyframes for rotating Claudia vinyl disc & audio waves (WS-07: Scoped via ctx.scopeAttr)
       const styleTag = document.createElement('style');
       styleTag.id = 'exile-music-styles';
       const s = `html[data-dsh-skin="${ctx.scopeAttr}"]`;
@@ -201,37 +164,6 @@ export default function defineSkinHooks() {
         }
         body[data-dsh-tab-hidden] ${s} .exile-disc-spin-target { animation-play-state: paused !important; }
         ${s} .exile-badge-card:focus-visible,
-        ${s} .exile-music-card:focus-visible,
-        ${s} .exile-action-btn:focus-visible,
-        ${s} .exile-bg-btn:focus-visible,
-        ${s} .exile-btn-hover:focus-visible,
-        ${s} .exile-popover-item:focus-visible {
-          outline: 2px solid #06b6d4;
-          outline-offset: 2px;
-        }
-        ${s} .exile-footer-container {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-          width: 100%;
-          box-sizing: border-box;
-          font-family: inherit;
-          margin-top: auto;
-          padding: 6px 0;
-        }
-        ${s} .exile-badge-card {
-          box-sizing: border-box;
-          display: flex;
-          align-items: center;
-          gap: 9px;
-          border-radius: 12px;
-          padding: 7px 11px;
-          cursor: pointer;
-          user-select: none;
-          transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, background 0.3s ease, border-color 0.2s ease;
-          backdrop-filter: blur(14px);
-          -webkit-backdrop-filter: blur(14px);
-        }
         ${s} .exile-badge-card:hover {
           transform: translateY(-1.5px);
         }
@@ -296,73 +228,6 @@ export default function defineSkinHooks() {
           text-overflow: ellipsis;
           letter-spacing: 0.3px;
           opacity: 0.85;
-        }
-        ${s} .exile-music-card {
-          box-sizing: border-box;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          border-radius: 12px;
-          padding: 8px 12px;
-          cursor: pointer;
-          user-select: none;
-          transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, background 0.3s ease, border-color 0.2s ease;
-          backdrop-filter: blur(14px);
-          -webkit-backdrop-filter: blur(14px);
-          font-family: inherit;
-        }
-        ${s} .exile-music-card:hover {
-          transform: translateY(-2px);
-        }
-        ${s} .exile-music-card:active {
-          transform: scale(0.98);
-        }
-        ${s} .exile-btn-hover {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          padding: 2px 4px;
-          border-radius: 4px;
-          transition: background 0.15s ease, transform 0.15s ease;
-        }
-        ${s} .exile-btn-hover:hover {
-          background: rgba(125, 125, 125, 0.2);
-          transform: scale(1.1);
-        }
-        /* Collapsed / Rail sidebar mode adjustments */
-        ${s} [data-sidebar-collapsed] .exile-badge-content,
-        ${s} [data-sidebar-collapsed] .exile-music-info {
-          display: none !important;
-        }
-        ${s} [data-sidebar-collapsed] .exile-badge-card,
-        ${s} [data-sidebar-collapsed] .exile-music-card {
-          width: 36px;
-          height: 36px;
-          padding: 0;
-          justify-content: center;
-          margin: 0 auto;
-        }
-        /* Mini Wallpaper Grid Popover */
-        ${s} .exile-wallpaper-popover {
-          position: fixed;
-          bottom: 96px;
-          left: 18px;
-          width: 310px;
-          max-height: 420px;
-          border-radius: 14px;
-          backdrop-filter: blur(24px);
-          -webkit-backdrop-filter: blur(24px);
-          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
-          z-index: 99999;
-          display: none;
-          flex-direction: column;
-          overflow: hidden;
-          font-family: inherit;
-          animation: exile-pop-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        @keyframes exile-pop-in {
-          from { opacity: 0; transform: translateY(8px) scale(0.96); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
         }
         ${s} .exile-popover-header {
           display: flex;
@@ -596,214 +461,7 @@ export default function defineSkinHooks() {
       badgeCard.appendChild(badgeContent);
       container.appendChild(badgeCard);
 
-      // --- 2. Claudia Vinyl Music Player ---
-      const card = document.createElement('div');
-      card.className = 'exile-music-card';
-      card.setAttribute('data-exile-music-player', 'true');
-      card.setAttribute('role', 'group');
-      card.setAttribute('tabindex', '0');
-
-      // Disc icon (Claudia cyan & brass gear vinyl)
-      const disc = document.createElement('div');
-      disc.classList.add('exile-disc-spin-target');
-      disc.style.cssText = `
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        background: radial-gradient(circle, #d4af37 16%, #0891b2 22%, #0e7490 68%, #164e63 100%);
-        box-shadow: 0 2px 6px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(34, 211, 238, 0.4);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        transition: transform 0.3s ease;
-      `;
-      const centerHole = document.createElement('div');
-      centerHole.style.cssText = 'width: 8px; height: 8px; border-radius: 50%; background: #ffffff; box-shadow: 0 0 2px rgba(6,182,212,0.6);';
-      disc.appendChild(centerHole);
-      card.appendChild(disc);
-
-      // Info block
-      const info = document.createElement('div');
-      info.className = 'exile-music-info';
-      info.style.cssText = 'display: flex; flex-direction: column; line-height: 1.25; min-width: 0; flex: 1;';
-
-      const titleRow = document.createElement('div');
-      titleRow.style.cssText = 'display: flex; align-items: center; justify-content: space-between; gap: 6px;';
-
-      const titleGroup = document.createElement('div');
-      titleGroup.style.cssText = 'display: flex; align-items: center; gap: 5px; min-width: 0; flex: 1;';
-
-      const tagBadge = document.createElement('span');
-      tagBadge.style.cssText = 'font-size: 9px; font-weight: 700; padding: 1px 4px; border-radius: 3px; flex-shrink: 0; line-height: 1.1;';
-      titleGroup.appendChild(tagBadge);
-
-      const title = document.createElement('span');
-      title.className = 'exile-music-title';
-      title.style.cssText = 'font-size: 11.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
-      const updateMusicTitleTip = setupOverflowTip(title, () => title.textContent);
-      titleGroup.appendChild(title);
-      titleRow.appendChild(titleGroup);
-
-      const ctrlGroup = document.createElement('div');
-      ctrlGroup.style.cssText = 'display: flex; align-items: center; gap: 4px; flex-shrink: 0;';
-
-      const playIcon = document.createElement('span');
-      playIcon.className = 'exile-btn-hover';
-      playIcon.textContent = '▶';
-      playIcon.style.cssText = 'font-size: 11px; cursor: pointer;';
-      playIcon.setAttribute('title', '播放 / 暂停');
-      ctrlGroup.appendChild(playIcon);
-
-      const nextBtn = document.createElement('span');
-      nextBtn.className = 'exile-btn-hover';
-      nextBtn.textContent = '⏭';
-      nextBtn.style.cssText = 'font-size: 10px; cursor: pointer;';
-      nextBtn.setAttribute('title', '切换下一首');
-      ctrlGroup.appendChild(nextBtn);
-
-      const volWrap = document.createElement('div');
-      volWrap.style.cssText = 'position: relative; display: flex; align-items: center; gap: 2px;';
-
-      const volBtn = document.createElement('span');
-      volBtn.className = 'exile-btn-hover';
-      volBtn.style.cssText = 'font-size: 11px; cursor: pointer; user-select: none;';
-
-      const updateVolIcon = () => {
-        if (audio.muted || audio.volume === 0) {
-          volBtn.textContent = '🔇';
-          volBtn.title = '已静音 (点击恢复音量)';
-        } else if (audio.volume < 0.5) {
-          volBtn.textContent = '🔉';
-          volBtn.title = `音量: ${Math.round(audio.volume * 100)}% (点击静音)`;
-        } else {
-          volBtn.textContent = '🔊';
-          volBtn.title = `音量: ${Math.round(audio.volume * 100)}% (点击静音)`;
-        }
-      };
-      updateVolIcon();
-
-      const volSlider = document.createElement('input');
-      volSlider.type = 'range';
-      volSlider.min = '0';
-      volSlider.max = '1';
-      volSlider.step = '0.05';
-      volSlider.value = String(currentVolume);
-      volSlider.className = 'exile-vol-slider';
-      volSlider.title = '滑动调节音量';
-
-      volBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (audio.muted || audio.volume === 0) {
-          audio.muted = false;
-          audio.volume = currentVolume > 0 ? currentVolume : 0.45;
-          volSlider.value = String(audio.volume);
-        } else {
-          audio.muted = true;
-        }
-        updateVolIcon();
-      });
-
-      volSlider.addEventListener('click', (e) => e.stopPropagation());
-      volSlider.addEventListener('input', (e) => {
-        e.stopPropagation();
-        const v = Number(e.target.value);
-        audio.muted = false;
-        audio.volume = v;
-        currentVolume = v;
-        try {
-          localStorage.setItem(VOLUME_KEY, String(v));
-        } catch (_) {}
-        updateVolIcon();
-      });
-
-      volWrap.appendChild(volBtn);
-      volWrap.appendChild(volSlider);
-      ctrlGroup.appendChild(volWrap);
-
-      titleRow.appendChild(ctrlGroup);
-      info.appendChild(titleRow);
-
-      const subtitle = document.createElement('span');
-      subtitle.className = 'exile-music-sub';
-      subtitle.style.cssText = 'font-size: 10px; opacity: 0.82; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
-      const updateSubtitleTip = setupOverflowTip(subtitle, () => subtitle.textContent);
-      info.appendChild(subtitle);
-      card.appendChild(info);
-      container.appendChild(card);
-
-      // --- 3. Theme palette sync (cards only; safe on every play/pause) ---
-      const applyCardTheme = () => {
-        const isDark = ctx.theme.get() === 'dark' || document.body.hasAttribute('data-ds-dark-theme');
-        themeBtn.textContent = isDark ? '🌙 暗色' : '☀️ 亮色';
-        themeBtn.title = isDark ? '当前为深色模式（大风暴区），点击切换为浅色' : '当前为浅色模式（安纳托雷），点击切换为深色';
-
-        if (isDark) {
-          badgeCard.style.background = 'rgba(18, 35, 60, 0.90)';
-          badgeCard.style.border = '1px solid rgba(34, 211, 238, 0.28)';
-          badgeCard.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.50)';
-          badgeTitle.style.color = '#e8f0f7';
-          badgeSub.style.color = '#bacbdb';
-          themeBtn.style.background = 'rgba(6, 182, 212, 0.20)';
-          themeBtn.style.border = '1px solid rgba(34, 211, 238, 0.38)';
-          themeBtn.style.color = '#22d3ee';
-          bgBtn.style.background = 'rgba(6, 182, 212, 0.20)';
-          bgBtn.style.border = '1px solid rgba(34, 211, 238, 0.38)';
-          bgBtn.style.color = '#22d3ee';
-
-          card.style.background = 'rgba(18, 35, 60, 0.90)';
-          card.style.border = isPlaying ? '1px solid #06b6d4' : '1px solid rgba(34, 211, 238, 0.28)';
-          card.style.boxShadow = isPlaying ? '0 4px 16px rgba(6, 182, 212, 0.25)' : '0 4px 16px rgba(0, 0, 0, 0.50)';
-          title.style.color = '#e8f0f7';
-          subtitle.style.color = '#bacbdb';
-          playIcon.style.color = '#22d3ee';
-          nextBtn.style.color = '#22d3ee';
-          volBtn.style.color = '#22d3ee';
-          tagBadge.style.background = 'rgba(6, 182, 212, 0.16)';
-          tagBadge.style.color = '#22d3ee';
-          tagBadge.style.border = '1px solid rgba(34, 211, 238, 0.35)';
-
-          popover.style.background = 'rgba(14, 28, 48, 0.96)';
-          popover.style.border = '1px solid rgba(34, 211, 238, 0.35)';
-          popover.style.color = '#e8f0f7';
-          popoverCycle.style.background = 'rgba(6, 182, 212, 0.20)';
-          popoverCycle.style.border = '1px solid rgba(34, 211, 238, 0.38)';
-          popoverCycle.style.color = '#22d3ee';
-        } else {
-          badgeCard.style.background = 'rgba(238, 240, 234, 0.92)';
-          badgeCard.style.border = '1px solid rgba(74, 88, 62, 0.24)';
-          badgeCard.style.boxShadow = '0 4px 16px rgba(22, 30, 24, 0.12)';
-          badgeTitle.style.color = '#1b2220';
-          badgeSub.style.color = '#45514a';
-          themeBtn.style.background = 'rgba(143, 100, 16, 0.10)';
-          themeBtn.style.border = '1px solid rgba(143, 100, 16, 0.26)';
-          themeBtn.style.color = '#8f6410';
-          bgBtn.style.background = 'rgba(143, 100, 16, 0.10)';
-          bgBtn.style.border = '1px solid rgba(143, 100, 16, 0.26)';
-          bgBtn.style.color = '#8f6410';
-
-          card.style.background = 'rgba(238, 240, 234, 0.92)';
-          card.style.border = isPlaying ? '1px solid #8f6410' : '1px solid rgba(74, 88, 62, 0.24)';
-          card.style.boxShadow = isPlaying ? '0 4px 16px rgba(143, 100, 16, 0.18)' : '0 4px 16px rgba(22, 30, 24, 0.12)';
-          title.style.color = '#1b2220';
-          subtitle.style.color = '#45514a';
-          playIcon.style.color = '#8f6410';
-          nextBtn.style.color = '#8f6410';
-          volBtn.style.color = '#8f6410';
-          tagBadge.style.background = 'rgba(143, 100, 16, 0.12)';
-          tagBadge.style.color = '#8f6410';
-          tagBadge.style.border = '1px solid rgba(143, 100, 16, 0.28)';
-
-          popover.style.background = 'rgba(238, 240, 234, 0.96)';
-          popover.style.border = '1px solid rgba(74, 88, 62, 0.28)';
-          popover.style.color = '#1b2220';
-          popoverCycle.style.background = 'rgba(143, 100, 16, 0.10)';
-          popoverCycle.style.border = '1px solid rgba(143, 100, 16, 0.26)';
-          popoverCycle.style.color = '#8f6410';
-        }
-      };
-
-      // --- 4. Wallpaper Palette Popover Setup ---
+      // --- 2. Floating Wallpaper Selector Popover ---
       const popover = document.createElement('div');
       popover.className = 'exile-wallpaper-popover';
 
@@ -986,102 +644,6 @@ export default function defineSkinHooks() {
         }
       });
 
-      // --- 5. Track switching & playback state ---
-      const updatePlayState = () => {
-        if (isPlaying) {
-          subtitle.textContent = `正在播放 [${currentIndex + 1}/${playlist.length}] • 点击暂停`;
-          playIcon.textContent = '⏸';
-          disc.style.animation = 'exile-disc-spin 3.5s linear infinite';
-        } else {
-          subtitle.textContent = `已就绪 [${currentIndex + 1}/${playlist.length}] • 点击播放`;
-          playIcon.textContent = '▶';
-          disc.style.animation = 'none';
-        }
-        updateSubtitleTip();
-        applyCardTheme();
-      };
-
-      const setTrack = (index, shouldPlay = false) => {
-        currentIndex = (index + playlist.length) % playlist.length;
-        const track = playlist[currentIndex];
-        audio.src = `${ctx.assetBase}/assets/${track.file}`;
-        title.textContent = `${track.title} • ${track.artist}`;
-        updateMusicTitleTip();
-        tagBadge.textContent = track.tag;
-        card.setAttribute('aria-label', `最后流亡主题曲: [${track.tag}] ${track.title} - ${track.artist}`);
-
-        if (shouldPlay) {
-          audio.play().then(() => {
-            isPlaying = true;
-            updatePlayState();
-          }).catch((err) => {
-            console.warn('[last-exile] Audio playback failed:', err);
-            isPlaying = false;
-            updatePlayState();
-            subtitle.textContent = '请再次点击以播放';
-            updateSubtitleTip();
-          });
-        } else {
-          isPlaying = false;
-          updatePlayState();
-        }
-      };
-
-      // Play / Pause toggle
-      const toggle = () => {
-        if (!isPlaying) {
-          audio.play().then(() => {
-            isPlaying = true;
-            updatePlayState();
-          }).catch((err) => {
-            console.warn('[last-exile] Audio playback failed:', err);
-            subtitle.textContent = '请再次点击以播放';
-            updateSubtitleTip();
-          });
-        } else {
-          audio.pause();
-          isPlaying = false;
-          updatePlayState();
-        }
-      };
-
-      // Next track handler
-      const nextTrack = (e) => {
-        if (e) e.stopPropagation();
-        setTrack(currentIndex + 1, isPlaying);
-      };
-
-      // Auto play next track when current ends
-      audio.addEventListener('ended', () => {
-        setTrack(currentIndex + 1, true);
-      });
-
-      // Initialize track 0
-      setTrack(0, false);
-
-      playIcon.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggle();
-      });
-      card.addEventListener('click', (e) => {
-        if (e.target.closest('button, input')) return;
-        toggle();
-      });
-      nextBtn.addEventListener('click', nextTrack);
-      card.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          if (e.target.closest('button, input')) return;
-          e.preventDefault();
-          toggle();
-        } else if (e.key === 'ArrowRight' || e.key === 'n') {
-          e.preventDefault();
-          nextTrack();
-        } else if (e.key === 'ArrowLeft' || e.key === 'p') {
-          e.preventDefault();
-          setTrack(currentIndex - 1, isPlaying);
-        }
-      });
-
       // --- 6. Mount into Sidebar or Fallback to Floating ---
       let mounted = false;
       const mountIntoSidebar = () => {
@@ -1201,8 +763,7 @@ export default function defineSkinHooks() {
         document.removeEventListener('keydown', handleKeyDown);
         popover.remove();
         tipBubble.remove();
-        audio.pause();
-        audio.src = '';
+        
         container.remove();
         styleTag.remove();
       });
