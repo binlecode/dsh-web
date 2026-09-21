@@ -128,7 +128,7 @@ export default function defineSkinHooks() {
             const incoming = isANow ? imgB : imgA;
             const outgoing = isANow ? imgA : imgB;
 
-            if (outgoing.src.endsWith(fileName) && outgoing.style.opacity === '1') {
+            if ((outgoing.src || '').endsWith(fileName) && outgoing.style.opacity === '1') {
               return;
             }
 
@@ -606,8 +606,7 @@ export default function defineSkinHooks() {
 
       /** Full theme reaction: palette + wallpaper (light/dark auto source). */
       const applyTheme = () => {
-        applyCardTheme();
-        later(() => {
+                later(() => {
           applyWallpaper(BACKGROUNDS[bgIndex]);
         }, 30);
       };

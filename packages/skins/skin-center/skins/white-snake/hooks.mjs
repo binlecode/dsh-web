@@ -128,7 +128,7 @@ export default function defineSkinHooks() {
             const incoming = isANow ? imgB : imgA;
             const outgoing = isANow ? imgA : imgB;
 
-            if (outgoing.src.endsWith(fileName) && outgoing.style.opacity === '1') {
+            if ((outgoing.src || '').endsWith(fileName) && outgoing.style.opacity === '1') {
               return;
             }
 
@@ -151,8 +151,7 @@ export default function defineSkinHooks() {
       styleTag.id = 'white-snake-styles';
       const s = `html[data-dsh-skin="${ctx.scopeAttr}"]`;
       styleTag.textContent = `
-        @keyframes snake-disc-spin {
-          from { transform: rotate(0deg); }
+        
           to { transform: rotate(360deg); }
         }
         @media (prefers-reduced-motion: reduce) {
@@ -301,13 +300,7 @@ export default function defineSkinHooks() {
         /* Collapsed / Rail sidebar mode adjustments */
         ${s} [data-sidebar-collapsed] .snake-badge-content,
         ${s} [data-sidebar-collapsed] .snake-badge-card,
-        ${s} [data-sidebar-collapsed] .snake-music-card {
-          width: 36px;
-          height: 36px;
-          padding: 0;
-          justify-content: center;
-          margin: 0 auto;
-        }
+        
 
         /* Mini Wallpaper Grid Popover */
         ${s} .snake-wallpaper-popover {
@@ -887,21 +880,7 @@ export default function defineSkinHooks() {
           bgBtn.style.color = '#2dd4bf';
 
           
-          disc.style.background = 'radial-gradient(circle, #2dd4bf 0%, #0d9488 45%, #042f2e 100%)';
-          disc.style.boxShadow = '0 2px 6px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(45, 212, 191, 0.4)';
-          discCore.style.background = '#ffffff';
-          discCore.style.boxShadow = '0 0 2px rgba(45, 212, 191, 0.6)';
-
-          tagBadge.style.background = 'rgba(45, 212, 191, 0.22)';
-          tagBadge.style.color = '#2dd4bf';
-          tagBadge.style.border = '1px solid rgba(45, 212, 191, 0.35)';
-          title.style.color = '#ebf5f3';
-          subtitle.style.color = '#9db2ad';
-
-          playIcon.style.color = '#2dd4bf';
-          nextBtn.style.color = '#2dd4bf';
-          volBtn.style.color = '#2dd4bf';
-          volSlider.style.color = '#2dd4bf';
+          
 
           popover.style.background = 'rgba(14, 22, 25, 0.94)';
           popover.style.border = '1px solid rgba(45, 212, 191, 0.25)';
@@ -926,21 +905,7 @@ export default function defineSkinHooks() {
           bgBtn.style.color = '#107c65';
 
           
-          disc.style.background = 'radial-gradient(circle, #5eead4 0%, #107c65 50%, #064e3b 100%)';
-          disc.style.boxShadow = '0 2px 6px rgba(0,0,0,0.25), inset 0 0 0 1px rgba(16, 124, 101, 0.3)';
-          discCore.style.background = '#ffffff';
-          discCore.style.boxShadow = '0 0 2px rgba(16, 124, 101, 0.5)';
-
-          tagBadge.style.background = 'rgba(16, 124, 101, 0.14)';
-          tagBadge.style.color = '#107c65';
-          tagBadge.style.border = '1px solid rgba(16, 124, 101, 0.25)';
-          title.style.color = '#161e19';
-          subtitle.style.color = '#48594f';
-
-          playIcon.style.color = '#107c65';
-          nextBtn.style.color = '#107c65';
-          volBtn.style.color = '#107c65';
-          volSlider.style.color = '#107c65';
+          
 
           popover.style.background = 'rgba(242, 246, 242, 0.94)';
           popover.style.border = '1px solid rgba(16, 124, 101, 0.20)';

@@ -74,7 +74,7 @@ export default function defineSkinHooks() {
         const isDark = ctx.theme.get() === 'dark' || document.body.hasAttribute('data-ds-dark-theme');
         let fileName = target.file;
         if (!fileName) {
-          fileName = isDark ? 'ghost-fleet.jpg' : 'porco001.jpg';
+          fileName = isDark ? 'porco002.jpg' : 'porco001.jpg';
         }
 
         const bgUrl = `${ctx.assetBase}/assets/${fileName}`;
@@ -130,7 +130,7 @@ export default function defineSkinHooks() {
             const incoming = isANow ? imgB : imgA;
             const outgoing = isANow ? imgA : imgB;
 
-            if (outgoing.src.endsWith(fileName) && outgoing.style.opacity === '1') {
+            if ((outgoing.src || '').endsWith(fileName) && outgoing.style.opacity === '1') {
               return;
             }
 
@@ -633,16 +633,14 @@ export default function defineSkinHooks() {
 
       /** Full theme reaction: palette + wallpaper (light/dark auto source). */
       const applyTheme = () => {
-        applyCardTheme();
-        later(() => {
+                later(() => {
           applyWallpaper(BACKGROUNDS[bgIndex]);
         }, 30);
       };
 
       const unsubTheme = ctx.theme.subscribe(applyTheme);
 
-      // Paint the initial track + counter now that the palette fn exists.
-      setTrack(0, false);
+            
 
       // --- 6. Mount into Sidebar Footer (One-Shot) ---
       let mounted = false;
