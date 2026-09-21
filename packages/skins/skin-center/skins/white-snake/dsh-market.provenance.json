@@ -3,9 +3,9 @@
   "source": "https://dsh-market.com",
   "kind": "skin",
   "id": "white-snake",
-  "installedAt": "2026-09-18T17:24:54.955118+00:00",
+  "installedAt": "2026-09-21T00:20:20.939108+00:00",
   "files": {
-    "skin.json": "9bfdf56c57bcf64aca1994f28038dcde5a82109f84254cb9c2df8a07b8a0c1b2",
-    "hooks.mjs": "17e61aa13e1d746a1bd8eaf9be58e13d4401863db7d56d7a154238c299157c93"
+    "skin.json": "9b491c07480bc0003ac921187fd1ab38fa97a186d4e8900bfed82e7e13d7b801",
+    "hooks.mjs": "f0421b121076f37952a33733a400d2ddc1d5b1ce08c40ffcfc3dd1794a89eafb"
   }
 }

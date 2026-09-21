@@ -25,32 +25,27 @@ last-exile (最后流亡 · Last Exile)
 
    本皮肤不代表官方，与 GONZO 无隶属或商业背书关系。权利人保留随时要求移除相关内容的权利。
 
-音乐素材出处 (music recordings provenance)
-----------------------------------------
+原创氛围音乐著作权说明 (original ambient music copyright & provenance)
+---------------------------------------------------------------------
 
-1. 《Clair de Lune》（月光 · 贝加马斯克组曲 · 苍穹夜空）
-   - 作曲：Claude Debussy (1862–1918)（作品已进入公有领域 Public Domain）
-   - 演奏：Laurens Goedhart
-   - 录音出处：Wikimedia Commons，按 Public Domain Mark 1.0 发布
-   - 规格：双声道立体声 (Stereo)，44.1kHz 采样率
-
-2. 《2nd Arabesque》（第二号蔓藤华彩曲 · 晴空先锋翱翔）
-   - 作曲：Claude Debussy (1862–1918)（作品已进入公有领域 Public Domain）
-   - 演奏：Jason M. C., Han
-   - 录音出处：Wikimedia Commons，按 Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0) 发布
-   - 规格：双声道立体声 (Stereo)，44.1kHz 采样率
+4. 本皮肤包含的 2 首背景氛围音乐为作者 100% 独立原创器乐作品，解构蒸汽朋克航空与爱尔兰新古典室内乐，
+   利用本地大模型（MiniMax-Music 3.0 MLX）物理声学流水线合成、HTDemucs 神经网络纯化及母带制作，
+   拥有完全自主的词曲及录音著作权，零第三方版权争议：
+   - assets/cloud-sea-dawn.mp3：《破晓云海 · 普雷斯提尔晨曦》（昼篇 · 爱尔兰哨笛与弦乐四重奏，G major，192kbps Stereo）
+   - assets/grandstream-breakthrough.mp3：《逆风穿越 · 大风暴区》（夜篇 · 激昂第一小提琴与大提琴长音，D minor，192kbps Stereo）
+   音乐作品随皮肤工程按 CC BY-NC-SA 4.0 开放非商业使用。
 
 皮肤工程与许可 (skin engineering and license)
 --------------------------------------------
 
-4. 皮肤工程实现（skin.json / skin.css / patches.css / hooks.mjs 与调色板重映射）由本皮肤作者
+5. 皮肤工程实现（skin.json / skin.css / patches.css / hooks.mjs 与调色板重映射）由本皮肤作者
    binlecode 制作，按 CC BY-NC-SA 4.0 发布。
    The skin engineering (skin.json / skin.css / patches.css / hooks.mjs and the palette
    remap) is the author's work, released under CC BY-NC-SA 4.0.
 
-5. 该许可只覆盖第 4 条的皮肤工程，不涵盖第 2 条中的官方美术素材；官方素材的
+6. 该许可涵盖第 4 条的原创音乐与第 5 条的皮肤工程，不涵盖第 2 条中的官方美术素材；官方素材的
    权利与使用条件完全由原权利人持有。
-   That license covers only the skin engineering in item 4 and does NOT extend
+   That license covers the original music and the skin engineering, but does NOT extend
    to the official material in item 2, whose rights remain with the original copyright holders.
 
 许可文本 (license text)

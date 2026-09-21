@@ -17,7 +17,7 @@
 - `skin.css` — L1：基础色 + 全部 `--dsw-*` 调色板重映射（亮色 `:root`、暗色 `body[data-ds-dark-theme]`）
 - `patches.css` — L3：东方素绢磨砂卡片、碧玉发丝微光描边、碧玉簪与水墨线稿（`assets/white-snake-emblem.svg` 与 `assets/white-snake-hero.svg`）
 - `hooks.mjs` — 运行时增强：昼夜壁纸平滑过渡与西湖留声播放器
-- `assets/` — 核心昼夜壁纸、矢量图标与公有领域立体声水墨禅意钢琴（萨蒂《Gnossienne No. 1》与《Gnossienne No. 3》）
+- `assets/` — 核心昼夜壁纸、矢量图标与原创西湖新国风五声丝竹氛围配乐（昼篇《断桥远眺·丝竹春水》与夜篇《夜航幽月·水月空明》）
 - `NOTICE` — 角色与美术素材版权出处声明
 - `LICENSE` — CC BY-NC-SA 4.0 许可证文本
 

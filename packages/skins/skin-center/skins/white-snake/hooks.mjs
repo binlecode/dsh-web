@@ -154,18 +154,18 @@ export default function defineSkinHooks() {
       // Music playlist
       const playlist = [
         {
-          id: "satie-gnossienne-1",
-          title: "Gnossienne No. 1",
-          artist: "Erik Satie",
-          tag: "禅意",
-          file: "satie-gnossienne-1.mp3",
+          id: "broken-bridge-vista",
+          title: "断桥远眺 · 丝竹春水 (D宫调式)",
+          artist: "原创昼篇 · MiniMax MLX",
+          tag: "水墨",
+          file: "broken-bridge-vista.mp3",
         },
         {
-          id: "satie-gnossienne-3",
-          title: "Gnossienne No. 3",
-          artist: "Erik Satie",
+          id: "night-boat-reverie",
+          title: "夜航幽月 · 水月空明 (G羽调式)",
+          artist: "原创夜篇 · MiniMax MLX",
           tag: "空灵",
-          file: "satie-gnossienne-3.mp3",
+          file: "night-boat-reverie.mp3",
         },
       ];
 

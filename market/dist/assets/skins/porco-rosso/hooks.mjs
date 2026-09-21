@@ -157,18 +157,18 @@ export default function defineSkinHooks() {
       // Music playlist
       const playlist = [
         {
-          id: "satie-gymnopedie-1",
-          title: "Gymnopédie No. 1",
-          artist: "Erik Satie",
-          tag: "Piano",
-          file: "satie-gymnopedie-1.mp3",
+          id: "cove-meditation",
+          title: "亚得里亚的夏日晴空 (吉卜力大调)",
+          artist: "原创昼篇 · MiniMax MLX",
+          tag: "原创",
+          file: "cove-meditation.mp3",
         },
         {
-          id: "chopin-nocturne-op9",
-          title: "Nocturne Op. 9 No. 2",
-          artist: "Frédéric Chopin",
-          tag: "Nocturne",
-          file: "chopin-nocturne-op9.mp3",
+          id: "adriatic-reverie",
+          title: "秘密海湾的风之通道 (吉卜力小调)",
+          artist: "原创夜篇 · MiniMax MLX",
+          tag: "原创",
+          file: "adriatic-reverie.mp3",
         },
       ];
 

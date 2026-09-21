@@ -152,18 +152,18 @@ export default function defineSkinHooks() {
 
       const playlist = [
         {
-          id: "debussy-clair-de-lune",
-          title: "Clair de Lune",
-          artist: "Claude Debussy",
-          tag: "Nocturne",
-          file: "debussy-clair-de-lune.mp3",
+          id: "cloud-sea-dawn",
+          title: "破晓云海 · 普雷斯提尔晨曦",
+          artist: "原创昼篇 · MiniMax MLX",
+          tag: "巡航",
+          file: "cloud-sea-dawn.mp3",
         },
         {
-          id: "debussy-arabesque-2",
-          title: "2nd Arabesque",
-          artist: "Claude Debussy",
-          tag: "Arabesque",
-          file: "debussy-arabesque-2.mp3",
+          id: "grandstream-breakthrough",
+          title: "逆风穿越 · 大风暴区",
+          artist: "原创夜篇 · MiniMax MLX",
+          tag: "风暴",
+          file: "grandstream-breakthrough.mp3",
         },
       ];
 

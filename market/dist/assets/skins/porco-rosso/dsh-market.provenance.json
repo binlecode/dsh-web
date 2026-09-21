@@ -3,9 +3,9 @@
   "source": "https://dsh-market.com",
   "kind": "skin",
   "id": "porco-rosso",
-  "installedAt": "2026-09-18T17:24:54.955118+00:00",
+  "installedAt": "2026-09-21T00:20:20.939108+00:00",
   "files": {
-    "skin.json": "ca8c696a3ea5f0e35291104cd22bffb8acaf64e08012eab1a18f9d1d3cc79cd7",
-    "hooks.mjs": "20689b4843b93e6529f1098e2bd79e8166b96fb681e8b4f7ee045141103a4700"
+    "skin.json": "672b0703c9c73d5d974f5b5e619bd6870bfa8ee2b7bc12ac894f7aeaa2ad02dc",
+    "hooks.mjs": "66d03062d56f4320a383d4423c768bd48211bee434dc4bbe8633207dcb22d144"
   }
 }
