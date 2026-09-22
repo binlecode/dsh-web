@@ -148,21 +148,9 @@ export default function defineSkinHooks() {
       applyWallpaper(BACKGROUNDS[bgIndex]);
 
       const styleTag = document.createElement('style');
-      styleTag.id = 'exile-music-styles';
+      styleTag.id = 'exile-skin-hooks-styles';
       const s = `html[data-dsh-skin="${ctx.scopeAttr}"]`;
       styleTag.textContent = `
-        @keyframes exile-disc-spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        @keyframes exile-music-glow {
-          0%, 100% { box-shadow: 0 0 6px rgba(6, 182, 212, 0.4), inset 0 0 4px rgba(34, 211, 238, 0.3); }
-          50% { box-shadow: 0 0 12px rgba(6, 182, 212, 0.8), inset 0 0 8px rgba(34, 211, 238, 0.6); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          ${s} .exile-disc-spin-target { animation: none !important; }
-        }
-        body[data-dsh-tab-hidden] ${s} .exile-disc-spin-target { animation-play-state: paused !important; }
         ${s} .exile-badge-card:focus-visible,
         ${s} .exile-badge-card:hover {
           transform: translateY(-1.5px);
@@ -279,25 +267,6 @@ export default function defineSkinHooks() {
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-        }
-        ${s} .exile-vol-slider {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 46px;
-          height: 3px;
-          border-radius: 2px;
-          background: rgba(125, 125, 125, 0.35);
-          outline: none;
-          cursor: pointer;
-        }
-        ${s} .exile-vol-slider::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 9px;
-          height: 9px;
-          border-radius: 50%;
-          background: currentColor;
-          cursor: pointer;
         }
       `;
       document.head.appendChild(styleTag);

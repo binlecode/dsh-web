@@ -153,18 +153,6 @@ export default function defineSkinHooks() {
       styleTag.id = 'porco-skin-hooks-styles';
       const s = `html[data-dsh-skin="${ctx.scopeAttr}"]`;
       styleTag.textContent = `
-        @keyframes porco-disc-spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        @keyframes porco-prop-spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          ${s} .porco-disc-spin-target { animation: none !important; }
-        }
-        body[data-dsh-tab-hidden] ${s} .porco-disc-spin-target { animation-play-state: paused !important; }
         ${s} .porco-badge-card:focus-visible,
         ${s} .porco-popover-item:focus-visible {
           outline: 2px solid #c32026;
@@ -305,25 +293,6 @@ export default function defineSkinHooks() {
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-        }
-        ${s} .porco-vol-slider {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 46px;
-          height: 3px;
-          border-radius: 2px;
-          background: rgba(125, 125, 125, 0.35);
-          outline: none;
-          cursor: pointer;
-        }
-        ${s} .porco-vol-slider::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 9px;
-          height: 9px;
-          border-radius: 50%;
-          background: #c32026;
-          cursor: pointer;
         }
       `;
       document.head.appendChild(styleTag);
